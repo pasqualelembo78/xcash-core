@@ -3910,6 +3910,22 @@ void check_data_hash(const std::size_t current_block_height,std::string &data_ha
   {
     data_hash = "dc63a8c27b8d57a037e27db7e68de3514fc4ceb3eb0d141d6ae0605e4bda267ff94213b7a337584d745b0c40080185dd717f47e99319d12f73bb95dfa13e4208";
   }
+  else if (current_block_height == 832613 && data_hash == "10d51f26de8a0d1c9c38f0cc332048a5d6b370a45f1c11771221cb5362784cf99971d16ce360627263a8198f217aa608aa92d66dd00e8b3bd036d1f127dad6e3")
+  {
+    data_hash = "29e39749cec86f763463ddff8107ba8fac8ca09d0118a1382949a8271b052c10d2ce884fdb19cd9badc5697767343a287b8c5d1360042176c2dec60f6e374e47";
+  }
+  else if (current_block_height == 835849 && data_hash == "c71acd1f7627a069a3b1c8886a0de991bfa6ddeb0007a0ad8e123901557dc6fe5c8d193d121bb66d175a940d0ac0503d4e826133501e2a95154101f4b8d9e18b")
+  {
+    data_hash = "dde80e6cb7946acc1cc65065aa62a419e6571405172f62ef549cb5bb4929f97e66c2533bd2c408f11d314a3b58241560f038960b8d4643c8201eb214467d272a";
+  }
+  else if (current_block_height == 837829 && data_hash == "2d5585dd9c50ea378ae12240d745bb14c65f5344ec66f1bb37ae040f04b076aa92321f674e127e4ec16f11830e8b7d6c1aab975983c7902c1aa5d3d2ea45b703")
+  {
+    data_hash = "d3f8b038749c0ddb5b0c5cdc2be93827acabc0ceba228ccad307fc220a825fbed319a56ca14cca1a720b39ff8fe952d57538a91158d4fc2cb64d697810a99378";
+  }
+  else if (current_block_height == 838889 && data_hash == "f884d613b064fa88b135cf900d1e9cae31dce8e825f8cb162c785b9d40cb4ae47419d5a569eee490c359b0a4abb29d8af2553501274c09b269fc5a0a9d5feb1a")
+  {
+    data_hash = "38dd05e193ae7526204ff384697fa592411ceb595fbda8842427ea250f2c6af35915f5cba2efc11163f0a18a4a6ca9fbb8ccab06e785be93c0a38582f6bf3d3e";
+  }
 }
 
 bool verify_network_block(std::vector<std::string> &block_verifiers_database_hashes, const block bl,const std::size_t current_block_height)
