@@ -3926,6 +3926,18 @@ void check_data_hash(const std::size_t current_block_height,std::string &data_ha
   {
     data_hash = "38dd05e193ae7526204ff384697fa592411ceb595fbda8842427ea250f2c6af35915f5cba2efc11163f0a18a4a6ca9fbb8ccab06e785be93c0a38582f6bf3d3e";
   }
+  else if (current_block_height == 839057 && data_hash == "0aba90f391b2082154365ed081641684cd6aa7945d1c1a457fc36a13957f12864baf8069e3d6750107ac2ceda20ae9d49fbd1fb9e6f1dc362ca938e4a4cd8b5a")
+  {
+    data_hash = "a6a1fbf9eb2cfa166f4bd384def3c344d70a62a5790db4d742de9a902deca9c39a9ab59dc9fb27e0f0c1d9a9eb21825157c605d75d1ea91214d94b96618ac41b";
+  }
+  else if (current_block_height == 839059 && data_hash == "c4036e9357fe26e4d29b5a307e9e8d883bccd8cfc050bcdc459bea33d3a24e13e0e74f5957dec0b8992b0c9a4ee01ab186905768434c04928dffcf15bb4631bb")
+  {
+    data_hash = "98df417b18765e04e202fd1f093756cb2d18f1d3b19ee3d35181d831705984cc3b2a7565d498e496a4800e3b42b4bb6b850bec56b0529c8795228673593f46b5";
+  }
+  else if (current_block_height == 839346 && data_hash == "52c72c2cc60dd0d69192c0540ccbbeb99a6729f7112c65b5df969f2694f447220147e22637467225e3d2847749291635d8efc12a9bc45a2f49d3e818caa6ac23")
+  {
+    data_hash = "dcca9a5a373c2d5fd94c3a0ea877c0b9ad289957ae7f630a85acdcedea748e6cf898354b4bc1f870b8e788a1364d5d2032ce3be59326821dfd539b69f2353da4";
+  }
 }
 
 bool verify_network_block(std::vector<std::string> &block_verifiers_database_hashes, const block bl,const std::size_t current_block_height)
