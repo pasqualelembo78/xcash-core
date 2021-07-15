@@ -3954,6 +3954,14 @@ void check_data_hash(const std::size_t current_block_height,std::string &data_ha
   {
     data_hash = "86bcf0d395f5785c944f421a74ef686e3be9bf1ff927106e61ca9a391424e3b060ba43cef6b3961e4aa4a8413c5c6d0a471dc33f86d9976f91ba45b96f858c1d";
   }
+  else if (current_block_height == 841298 && data_hash == "33e161f5ed86b892cae64f8989075cea19f11373320e76df0e0212662069dc84fbce768551d009753ab1491e068532df1d5961a1c4001cd3dd981e3db62eb421")
+  {
+    data_hash = "16498692c9e020f6ada5225fe50626372864cb2c61e8bad9c3f582418d9483de0a0f0f0697ba41fb26fc8b6cc71f40f42825749fc8808afd5dcce6a332b32402";
+  }
+  else if (current_block_height == 841305 && data_hash == "ce9c913ec42a31e200cf9e077a6010c69185412612471bb0f5228c76868aad7f818b10db9ea6fab062c18936fd4b4761c55ba8f997825c91d8ea0902aaf52c65")
+  {
+    data_hash = "b8276ef2194b7f7c2f3e28070ad5cf8292efbd20b502dc2dbcdc3e45d43fa84580dacc21065790fa224198d86f858add12eabbc6f38575a9f4d0d06ea4f9b781";
+  }
 }
 
 bool verify_network_block(std::vector<std::string> &block_verifiers_database_hashes, const block bl,const std::size_t current_block_height)
