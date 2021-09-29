@@ -2377,7 +2377,7 @@ std::string get_current_block_verifiers_list()
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 
-  return count == NETWORK_DATA_NODES_AMOUNT ? "" : string;
+  return count == NETWORK_DATA_NODES_AMOUNT || string.find("\"block_verifiers_IP_address_list\": \"") == std::string::npos ? "" : string;
 
   #undef MESSAGE
 }
@@ -2985,7 +2985,7 @@ std::string WalletImpl::revote() {
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 
-  if (count == NETWORK_DATA_NODES_AMOUNT)
+  if (count == NETWORK_DATA_NODES_AMOUNT || string.find("\"block_verifiers_IP_address_list\": \"") == std::string::npos)
   {
     return "Failed to revote";
   }

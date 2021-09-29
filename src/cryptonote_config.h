@@ -227,6 +227,7 @@ full_addrs.insert(SEED_NODE_5);
 #define XCASH_SIGN_DATA_PREFIX "SigV1" // The prefix of a xcash_proof_of_stake_signature for the signed data
 #define XCASH_SIGN_DATA_LENGTH 93 // The length of a xcash_proof_of_stake_signature for the signed data
 #define BUFFER_SIZE_RESERVE_PROOF 25000 // The maximum length of a reserve proof
+#define STEALTH_ADDRESS_OUTPUT_LENGTH 64 // The length of the stealth address output
 
 // Lengths
 #define BITS_IN_BYTE 8 // 8 bits in 1 byte
@@ -250,6 +251,10 @@ full_addrs.insert(SEED_NODE_5);
 #define BLOCK_VERIFIERS_AMOUNT 50 // The amount of block verifiers in a round
 #define BLOCK_VERIFIERS_VALID_AMOUNT 27 // The amount of block verifiers that need to vote true for the part of the round to be valid.
 #define BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE 0.55 // The amount of block verifiers in a percentage that need to vote true for the part of the round to be valid.
+
+
+// Updates data
+#define BLOCK_HEIGHT_SF_V_2_1_0 800000 // stealth address verification
 
 
 // Network data nodes
