@@ -32,7 +32,13 @@
 
 #include <list>
 #include <numeric>
+
+#if BOOST_VERSION >= 107200
 #include <boost/timer/progress_display.hpp>
+#else
+#include <boost/timer/timer.hpp>
+#endif
+
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/random_generator.hpp>
 
