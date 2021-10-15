@@ -4184,19 +4184,42 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
 
 
 
-bool check_if_synced(const std::vector<std::string> block_verifiers_database_hashes)
+void reset_data_hash(std::vector<std::string> &block_verifiers_database_hashes,std::vector<std::string> &block_verifiers_stealth_addresses)
 {
   // Variables
   std::size_t count;
 
   for (count = 0; count < BLOCK_VERIFIERS_TOTAL_AMOUNT; count++)
   {
-    if (block_verifiers_database_hashes[count] != "")
+    block_verifiers_database_hashes[count] = "";
+    block_verifiers_stealth_addresses[count] = "";
+  }
+  return;
+}
+
+
+
+bool check_if_synced(std::vector<std::string> &block_verifiers_database_hashes,std::vector<std::string> &block_verifiers_stealth_addresses)
+{
+  // Variables
+  std::size_t count;
+  std::size_t counter;
+
+  for (count = 0, counter = 0; count < BLOCK_VERIFIERS_TOTAL_AMOUNT; count++)
+  {
+    if (block_verifiers_database_hashes[count] == "")
     {
-      return false;
+      counter++;
     }
   }
-  return true;
+
+  if (counter >= BLOCK_VERIFIERS_VALID_AMOUNT)
+  {
+    // make sure to reset all of the strings in case of a malfunctioning delegate
+    reset_data_hash(block_verifiers_database_hashes,block_verifiers_stealth_addresses);
+    return true;
+  }
+  return false;
 }
 
 
@@ -4227,7 +4250,7 @@ bool check_block_verifier_node_signed_block(const block bl, const std::size_t cu
   }
 
   // check if you need to get the datbase hashes. This will be the first time running the program, or if you have synced 288 blocks and need the next 288 blocks database hashes
-  if (check_if_synced(block_verifiers_database_hashes))
+  if (check_if_synced(block_verifiers_database_hashes,block_verifiers_stealth_addresses))
   {
     // get the decentralized database hash for each block from the current block on the local copy of the blockchain to the synced current network block up to a maximum of 288 blocks
     if (!get_network_block_database_hash(block_verifiers_database_hashes,block_verifiers_stealth_addresses,current_block_height))
