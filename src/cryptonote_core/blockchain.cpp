@@ -4213,7 +4213,7 @@ bool check_if_synced(std::vector<std::string> &block_verifiers_database_hashes,s
     }
   }
 
-  if (counter >= BLOCK_VERIFIERS_VALID_AMOUNT)
+  if (counter >= ((BLOCK_VERIFIERS_TOTAL_AMOUNT - BLOCK_VERIFIERS_AMOUNT) + BLOCK_VERIFIERS_VALID_AMOUNT))
   {
     // make sure to reset all of the strings in case of a malfunctioning delegate
     reset_data_hash(block_verifiers_database_hashes,block_verifiers_stealth_addresses);
