@@ -4142,19 +4142,41 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
 
 
 
-bool check_if_synced(const std::vector<std::string> block_verifiers_database_hashes)
+void reset_data_hash(std::vector<std::string> &block_verifiers_database_hashes)
 {
   // Variables
   std::size_t count;
 
   for (count = 0; count < BLOCK_VERIFIERS_TOTAL_AMOUNT; count++)
   {
-    if (block_verifiers_database_hashes[count] != "")
+    block_verifiers_database_hashes[count] = "";
+  }
+  return;
+}
+
+
+
+bool check_if_synced(std::vector<std::string> &block_verifiers_database_hashes)
+{
+  // Variables
+  std::size_t count;
+  std::size_t counter;
+
+  for (count = 0, counter = 0; count < BLOCK_VERIFIERS_TOTAL_AMOUNT; count++)
+  {
+    if (block_verifiers_database_hashes[count] == "")
     {
-      return false;
+      counter++;
     }
   }
-  return true;
+
+  if (counter >= ((BLOCK_VERIFIERS_TOTAL_AMOUNT - BLOCK_VERIFIERS_AMOUNT) + BLOCK_VERIFIERS_VALID_AMOUNT))
+  {
+    // make sure to reset all of the strings in case of a malfunctioning delegate
+    reset_data_hash(block_verifiers_database_hashes);
+    return true;
+  }
+  return false;
 }
 
 
