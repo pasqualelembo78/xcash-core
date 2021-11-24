@@ -66,6 +66,8 @@
 #define GET_IO_SERVICE(s) ((s).get_io_service())
 #endif
 
+using namespace boost::placeholders;
+
 PRAGMA_WARNING_PUSH
 namespace epee
 {

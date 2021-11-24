@@ -30,6 +30,8 @@
 #include <boost/utility/value_init.hpp>
 #include "net/levin_base.h"
 
+using namespace boost::placeholders;
+
 #undef XCASH_DEFAULT_LOG_CATEGORY
 #define XCASH_DEFAULT_LOG_CATEGORY "net"
 

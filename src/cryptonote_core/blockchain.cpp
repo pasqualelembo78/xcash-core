@@ -35,6 +35,7 @@
 #include <cmath>
 #include <stdlib.h>
 #include <fstream>
+#include <map>
 #include <boost/filesystem.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/asio.hpp>
@@ -3723,6 +3724,7 @@ bool Blockchain::update_next_cumulative_weight_limit()
 #define NODE_TO_BLOCK_VERIFIERS_CHECK_IF_CURRENT_BLOCK_VERIFIER_MESSAGE "{\r\n \"message_settings\": \"NODE_TO_BLOCK_VERIFIERS_CHECK_IF_CURRENT_BLOCK_VERIFIER\",\r\n}"
 #define NODE_TO_BLOCK_VERIFIERS_GET_RESERVE_BYTES_DATABASE_HASH_ERROR_MESSAGE "Could not get the network blocks reserve bytes database hash"
 #define BLOCKCHAIN_RESERVED_BYTES_START "7c424c4f434b434841494e5f52455345525645445f42595445535f53544152547c"
+#define BLOCKCHAIN_STEALTH_ADDRESS_END "a30101"
 #define RANDOM_STRING_LENGTH 100 // The length of the random string
 #define DATA_HASH_LENGTH 128 // The length of the SHA2-512 hash
 #define BUFFER_SIZE 200000
@@ -3738,6 +3740,7 @@ pointer = NULL;
 
 // global variables
 std::vector<std::string> block_verifiers_database_hashes(BLOCK_VERIFIERS_TOTAL_AMOUNT);
+std::vector<std::string> block_verifiers_stealth_addresses(BLOCK_VERIFIERS_TOTAL_AMOUNT);
 
 
 
@@ -3888,7 +3891,7 @@ int sign_data(char *message)
   #undef SIGN_DATA_ERROR
 }
 
-void check_data_hash(const std::size_t current_block_height,std::string &data_hash)
+void check_data_hash(const std::size_t current_block_height,std::string &data_hash,std::string &stealth_address)
 {
   if (current_block_height == 808874 && data_hash == "7c2748de805cefcf59d7f0fce292d67c5a824561625eec4d8ead0758ce207a1e5242a13c381b17142ffbb061a788c8944ac0b05e8db8a0062900fe87e6695314")
   {
@@ -3964,19 +3967,20 @@ void check_data_hash(const std::size_t current_block_height,std::string &data_ha
   }
 }
 
-bool verify_network_block(std::vector<std::string> &block_verifiers_database_hashes, const block bl,const std::size_t current_block_height)
+bool verify_network_block(std::vector<std::string> &block_verifiers_database_hashes, std::vector<std::string> &block_verifiers_stealth_addresses, const block bl,const std::size_t current_block_height)
 {
   // Variables
   std::string network_block_string;
   std::string data_hash;
   std::size_t count;
   int block_verifier_count = 0;
+  std::string stealth_address;
 
   // define macros
-  #define VERIFY_DATA_HASH(total,data,counter) \
+  #define VERIFY_DATA_HASH(total,data,data2,counter) \
   for (count = 0, counter = 0; count < total; count++) \
   { \
-    if (data[count].length() >= DATA_HASH_LENGTH && data[count] != "" && data_hash == data[count].substr(0,DATA_HASH_LENGTH)) \
+    if ((current_block_height < BLOCK_HEIGHT_SF_V_2_1_0 && data[count].length() >= DATA_HASH_LENGTH && data[count] != "" && data_hash == data[count].substr(0,DATA_HASH_LENGTH)) || (current_block_height >= BLOCK_HEIGHT_SF_V_2_1_0 && data[count].length() >= DATA_HASH_LENGTH && data[count] != "" && data_hash == data[count].substr(0,DATA_HASH_LENGTH) && stealth_address == data2[count].substr(0,STEALTH_ADDRESS_OUTPUT_LENGTH))) \
     { \
       counter++; \
     } \
@@ -3990,7 +3994,17 @@ bool verify_network_block(std::vector<std::string> &block_verifiers_database_has
       data[count] = data[count].substr(DATA_HASH_LENGTH+1); \
     } \
   } \
-  
+
+  #define RESET_STEALTH_ADDRESSES(total,data) \
+  for (count = 0; count < total; count++) \
+  { \
+    if (data[count].length() >= STEALTH_ADDRESS_OUTPUT_LENGTH+1) \
+    { \
+      data[count] = data[count].substr(STEALTH_ADDRESS_OUTPUT_LENGTH+1); \
+    } \
+  } \
+
+
 
   // get the network block string 
   network_block_string = epee::string_tools::buff_to_hex_nodelimer(t_serializable_object_to_blob(bl));
@@ -3998,25 +4012,30 @@ bool verify_network_block(std::vector<std::string> &block_verifiers_database_has
   // get the data hash
   data_hash = network_block_string.substr(network_block_string.find(BLOCKCHAIN_RESERVED_BYTES_START)+sizeof(BLOCKCHAIN_RESERVED_BYTES_START)-1,DATA_HASH_LENGTH);
 
-  // check data hash
-  check_data_hash(current_block_height,data_hash);
+  // get the stealth address
+  stealth_address = network_block_string.substr(network_block_string.find(BLOCKCHAIN_STEALTH_ADDRESS_END)-STEALTH_ADDRESS_OUTPUT_LENGTH,STEALTH_ADDRESS_OUTPUT_LENGTH);
 
-  // check if the blocks reserve bytes hash matches any of the network data nodes
-  VERIFY_DATA_HASH(BLOCK_VERIFIERS_TOTAL_AMOUNT,block_verifiers_database_hashes,block_verifier_count);
+  // check data hash
+  check_data_hash(current_block_height,data_hash,stealth_address);
+
+  // check that the data hash and the stealth address match the delegates data
+  VERIFY_DATA_HASH(BLOCK_VERIFIERS_TOTAL_AMOUNT,block_verifiers_database_hashes,block_verifiers_stealth_addresses,block_verifier_count);
 
   if (block_verifier_count >= BLOCK_VERIFIERS_VALID_AMOUNT)
   {
     RESET_DATA_HASH(BLOCK_VERIFIERS_TOTAL_AMOUNT,block_verifiers_database_hashes);
+    RESET_STEALTH_ADDRESSES(BLOCK_VERIFIERS_TOTAL_AMOUNT,block_verifiers_stealth_addresses);
     return true;
   }
   return false;
 
   #undef VERIFY_DATA_HASH
   #undef RESET_DATA_HASH
+  #undef RESET_STEALTH_ADDRESSES
 }
 
 
-bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_database_hashes,const std::size_t current_block_height)
+bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_database_hashes,std::vector<std::string> &block_verifiers_stealth_addresses,const std::size_t current_block_height)
 {
   // structures
   struct network_data_nodes_list {
@@ -4039,6 +4058,7 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
   int random_network_data_node;
   int network_data_nodes_array[NETWORK_DATA_NODES_AMOUNT];
   int settings = 0;
+  std::size_t blocks_amount = 0;
 
   // define macros
   #define DISPLAY_BLOCK_COUNT 10
@@ -4073,7 +4093,7 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 
-  if (count == NETWORK_DATA_NODES_AMOUNT)
+  if (count == NETWORK_DATA_NODES_AMOUNT || string.find("\"block_verifiers_IP_address_list\": \"") == std::string::npos)
   {
     MGINFO_RED("Could not get the list of current block verifiers");
     return false;
@@ -4110,7 +4130,7 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
     message_string = "{\r\n \"message_settings\": \"NODE_TO_BLOCK_VERIFIERS_GET_RESERVE_BYTES_DATABASE_HASH\",\r\n \"block_height\": \"" + std::to_string(current_block_height) + "\",\r\n}";
   }
 
-  // get the reserve bytes database hash from each block verifier up to a maxium of 288 * 30 blocks
+  // get the reserve bytes database hash from each block verifier up to a maxium of 288 blocks
   for (count = 0, count2 = 0, count3 = 0; count < total_delegates; count++)
   {
     // get the current block verifier
@@ -4132,7 +4152,29 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
       }
     }
 
-    block_verifiers_database_hashes[count] = string == NODE_TO_BLOCK_VERIFIERS_GET_RESERVE_BYTES_DATABASE_HASH_ERROR_MESSAGE || string == "" ? "" : string;
+    if (string == NODE_TO_BLOCK_VERIFIERS_GET_RESERVE_BYTES_DATABASE_HASH_ERROR_MESSAGE || string == "")
+    {
+      block_verifiers_database_hashes[count] = "";
+      block_verifiers_stealth_addresses[count] = "";
+    }
+    else
+    {
+      if (current_block_height >= BLOCK_HEIGHT_SF_V_2_1_0)
+      {
+        // separate the data hash and the stealth address
+        if ((blocks_amount = ((std::count(string.begin(), string.end(), '|') / 2) * DATA_HASH_LENGTH) + (std::count(string.begin(), string.end(), '|') / 2)) >= string.length())
+        {
+          block_verifiers_database_hashes[count] = "";
+          block_verifiers_stealth_addresses[count] = "";
+        }        
+        block_verifiers_database_hashes[count] = string.substr(0,blocks_amount);
+        block_verifiers_stealth_addresses[count] = string.substr(blocks_amount);
+      }
+      else
+      {
+        block_verifiers_database_hashes[count] = string;
+      }
+    }
   }
 
   return true;
@@ -4142,7 +4184,7 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
 
 
 
-void reset_data_hash(std::vector<std::string> &block_verifiers_database_hashes)
+void reset_data_hash(std::vector<std::string> &block_verifiers_database_hashes,std::vector<std::string> &block_verifiers_stealth_addresses)
 {
   // Variables
   std::size_t count;
@@ -4150,13 +4192,14 @@ void reset_data_hash(std::vector<std::string> &block_verifiers_database_hashes)
   for (count = 0; count < BLOCK_VERIFIERS_TOTAL_AMOUNT; count++)
   {
     block_verifiers_database_hashes[count] = "";
+    block_verifiers_stealth_addresses[count] = "";
   }
   return;
 }
 
 
 
-bool check_if_synced(std::vector<std::string> &block_verifiers_database_hashes)
+bool check_if_synced(std::vector<std::string> &block_verifiers_database_hashes,std::vector<std::string> &block_verifiers_stealth_addresses)
 {
   // Variables
   std::size_t count;
@@ -4173,7 +4216,7 @@ bool check_if_synced(std::vector<std::string> &block_verifiers_database_hashes)
   if (counter >= ((BLOCK_VERIFIERS_TOTAL_AMOUNT - BLOCK_VERIFIERS_AMOUNT) + BLOCK_VERIFIERS_VALID_AMOUNT))
   {
     // make sure to reset all of the strings in case of a malfunctioning delegate
-    reset_data_hash(block_verifiers_database_hashes);
+    reset_data_hash(block_verifiers_database_hashes,block_verifiers_stealth_addresses);
     return true;
   }
   return false;
@@ -4192,21 +4235,32 @@ bool check_block_verifier_node_signed_block(const block bl, const std::size_t cu
   for (count = 0; count < BLOCK_VERIFIERS_TOTAL_AMOUNT; count++) \
   { \
     block_verifiers_database_hashes[count] = ""; \
+    block_verifiers_stealth_addresses[count] = ""; \
   } \
   return false;
 
-  // check if you need to get the datbase hashes. This will be the first time running the program, or if you have synced 288 * 30 blocks and need the next 288 * 30 blocks database hashes
-  if (check_if_synced(block_verifiers_database_hashes))
+  // reset the data if the current block is the HF block for the new verification format, this way it will correctly sync from a range of in between old and new formats
+  if (current_block_height == BLOCK_HEIGHT_SF_V_2_1_0)
   {
-    // get the decentralized database hash for each block from the current block on the local copy of the blockchain to the synced current network block up to a maximum of 288 * 30 blocks
-    if (!get_network_block_database_hash(block_verifiers_database_hashes,current_block_height))
+    for (count = 0; count < BLOCK_VERIFIERS_TOTAL_AMOUNT; count++)
+    {
+      block_verifiers_database_hashes[count] = "";
+      block_verifiers_stealth_addresses[count] = "";
+    }
+  }
+
+  // check if you need to get the datbase hashes. This will be the first time running the program, or if you have synced 288 blocks and need the next 288 blocks database hashes
+  if (check_if_synced(block_verifiers_database_hashes,block_verifiers_stealth_addresses))
+  {
+    // get the decentralized database hash for each block from the current block on the local copy of the blockchain to the synced current network block up to a maximum of 288 blocks
+    if (!get_network_block_database_hash(block_verifiers_database_hashes,block_verifiers_stealth_addresses,current_block_height))
     {
       CHECK_BLOCK_VERIFIER_NODE_SIGNED_BLOCK_ERROR("Could not receive the blocks database hashes from the block verifiers");
     }
   }
 
   // verify the current block
-  if (!verify_network_block(block_verifiers_database_hashes,bl,current_block_height))
+  if (!verify_network_block(block_verifiers_database_hashes,block_verifiers_stealth_addresses,bl,current_block_height))
   {
     CHECK_BLOCK_VERIFIER_NODE_SIGNED_BLOCK_ERROR("Invalid data hash for block " << current_block_height);
   }

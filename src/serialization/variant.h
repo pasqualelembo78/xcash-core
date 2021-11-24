@@ -43,6 +43,9 @@
 #include <boost/mpl/if.hpp>
 #include <boost/mpl/front.hpp>
 #include <boost/mpl/pop_front.hpp>
+#include <boost/mpl/size.hpp>
+#include <boost/mpl/assert.hpp>
+#include <boost/mpl/contains.hpp>
 #include "serialization.h"
 
 /*! \struct variant_serialization_triats

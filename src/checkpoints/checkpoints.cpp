@@ -40,6 +40,8 @@ using namespace epee;
 #include "storages/portable_storage_template_helper.h" // epee json include
 #include "serialization/keyvalue_serialization.h"
 
+using namespace boost::placeholders;
+
 #undef XCASH_DEFAULT_LOG_CATEGORY
 #define XCASH_DEFAULT_LOG_CATEGORY "checkpoints"
 

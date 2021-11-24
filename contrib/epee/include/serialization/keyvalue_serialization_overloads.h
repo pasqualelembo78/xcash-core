@@ -32,6 +32,9 @@
 #include <deque>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/contains_fwd.hpp>
+#include <boost/mpl/size.hpp>
+#include <boost/mpl/assert.hpp>
+#include <boost/mpl/contains.hpp>
 
 namespace epee
 {

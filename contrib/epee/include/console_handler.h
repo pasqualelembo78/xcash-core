@@ -41,6 +41,8 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
 
+using namespace boost::placeholders;
+
 #ifdef HAVE_READLINE
   #include "readline_buffer.h"
 #endif

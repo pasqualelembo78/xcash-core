@@ -2332,7 +2332,7 @@ std::string get_current_block_verifiers_list()
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
   }
 
-  return count == NETWORK_DATA_NODES_AMOUNT ? "" : string;
+  return count == NETWORK_DATA_NODES_AMOUNT || string.find("\"block_verifiers_IP_address_list\": \"") == std::string::npos ? "" : string;
 
   #undef MESSAGE
 }
@@ -8255,7 +8255,7 @@ void simple_wallet::print_accounts()
 {
   const std::pair<std::map<std::string, std::string>, std::vector<std::string>>& account_tags = m_wallet->get_account_tags();
   size_t num_untagged_accounts = m_wallet->get_num_subaddress_accounts();
-  for (const std::pair<std::string, std::string>& p : account_tags.first)
+  for (const std::pair<std::string, std::string> p : account_tags.first)
   {
     const std::string& tag = p.first;
     print_accounts(tag);

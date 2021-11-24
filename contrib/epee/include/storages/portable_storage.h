@@ -35,6 +35,9 @@
 #include "portable_storage_to_json.h"
 #include "portable_storage_from_json.h"
 #include "portable_storage_val_converters.h"
+#include <boost/mpl/size.hpp>
+#include <boost/mpl/assert.hpp>
+#include <boost/mpl/contains.hpp>
 
 namespace epee
 {
