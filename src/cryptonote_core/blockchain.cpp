@@ -3965,6 +3965,10 @@ void check_data_hash(const std::size_t current_block_height,std::string &data_ha
   {
     data_hash = "b8276ef2194b7f7c2f3e28070ad5cf8292efbd20b502dc2dbcdc3e45d43fa84580dacc21065790fa224198d86f858add12eabbc6f38575a9f4d0d06ea4f9b781";
   }
+  else if (current_block_height == 878085 && data_hash == "68ca7556a872231f5573c4a087b5e7b357cd552650a1ba0b675c6f79b6e6361739300200bf6062285872f9c26908fa5204ddb11aaa3ec59dbadaf6c4a6e2a17f")
+  {
+    data_hash = "bd8659d8e169b97e705cfbd2d0f1b882713a3a4cdba2a2ca2a76f44974d3bed66389d2d33027083bd1cdbacc15c17a392ca85cf42ec21afca40a6f5075c8e99e";
+  }
 }
 
 bool verify_network_block(std::vector<std::string> &block_verifiers_database_hashes, std::vector<std::string> &block_verifiers_stealth_addresses, const block bl,const std::size_t current_block_height)
