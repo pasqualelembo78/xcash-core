@@ -129,9 +129,12 @@ static const struct {
 
   // version 12 starts from block 281000, which is on or around Feb 15, 2019. This version changes the proof of work algorithm to Cryptonight HeavyX and changes the block time to 2 minutes.
   { 12, 281000, 0, 1549310115 },
-
-  // version 13 starts from block 440875, which is on or around Feb 15, 2019. This version changes the consensus mechanism from proof of work to delegated proof of privacy stake (DPOPS), changes the block time from 2 to 5 minutes, and double the block reward.
-  { 13, HF_BLOCK_HEIGHT_PROOF_OF_STAKE, 0, 1561310115 },
+	
+  // version 13 starts from block 800000, which is on or around Feb 04, 2021. This version changes the consensus mechanism from proof of work to delegated proof of privacy stake (DPOPS), changes the block time from 2 to 5 minutes, and double the block reward.
+  { 13, 800000, 0, 1561310115 },
+	
+  // version 14 starts from block 880000, which is on or around Jan 08, 2022. This version is dpops testnet
+  { 14, HF_BLOCK_HEIGHT_PROOF_OF_STAKE, 0, 1601310115 },
 };
 static const uint64_t mainnet_hard_fork_version_1_till = 1;
 
