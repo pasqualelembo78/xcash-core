@@ -216,7 +216,7 @@ full_addrs.insert(SEED_NODE_5);
 // XCASH DPOPS
 
 // Blockchain
-#define HF_VERSION_PROOF_OF_STAKE 13
+#define HF_VERSION_PROOF_OF_STAKE 14
 #define HF_BLOCK_HEIGHT_PROOF_OF_STAKE 880000 // The first block of the X-CASH proof of stake
 #define BLOCK_TIME 5 // the block time in minutes
 #define BLOCKS_PER_DAY_FIVE_MINUTE_BLOCK_TIME 288 // The blocks per day with a 5 minute block time
