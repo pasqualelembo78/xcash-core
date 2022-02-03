@@ -42,9 +42,6 @@ const char* const GetTransactions::name = "get_transactions";
 const char* const KeyImagesSpent::name = "key_images_spent";
 const char* const GetTxGlobalOutputIndices::name = "get_tx_global_output_indices";
 const char* const SendRawTx::name = "send_raw_tx";
-const char* const StartMining::name = "start_mining";
-const char* const StopMining::name = "stop_mining";
-const char* const MiningStatus::name = "mining_status";
 const char* const GetInfo::name = "get_info";
 const char* const SaveBC::name = "save_bc";
 const char* const GetBlockHash::name = "get_block_hash";
@@ -305,90 +302,6 @@ rapidjson::Value SendRawTx::Response::toJson(rapidjson::Document& doc) const
 void SendRawTx::Response::fromJson(rapidjson::Value& val)
 {
   GET_FROM_JSON_OBJECT(val, relayed, relayed);
-}
-
-rapidjson::Value StartMining::Request::toJson(rapidjson::Document& doc) const
-{
-  auto val = Message::toJson(doc);
-
-  auto& al = doc.GetAllocator();
-
-  INSERT_INTO_JSON_OBJECT(val, doc, miner_address, miner_address);
-  INSERT_INTO_JSON_OBJECT(val, doc, threads_count, threads_count);
-  INSERT_INTO_JSON_OBJECT(val, doc, do_background_mining, do_background_mining);
-  INSERT_INTO_JSON_OBJECT(val, doc, ignore_battery, ignore_battery);
-
-  return val;
-}
-
-void StartMining::Request::fromJson(rapidjson::Value& val)
-{
-  GET_FROM_JSON_OBJECT(val, miner_address, miner_address);
-  GET_FROM_JSON_OBJECT(val, threads_count, threads_count);
-  GET_FROM_JSON_OBJECT(val, do_background_mining, do_background_mining);
-  GET_FROM_JSON_OBJECT(val, ignore_battery, ignore_battery);
-}
-
-rapidjson::Value StartMining::Response::toJson(rapidjson::Document& doc) const
-{
-  return Message::toJson(doc);
-}
-
-void StartMining::Response::fromJson(rapidjson::Value& val)
-{
-}
-
-
-rapidjson::Value StopMining::Request::toJson(rapidjson::Document& doc) const
-{
-  return Message::toJson(doc);
-}
-
-void StopMining::Request::fromJson(rapidjson::Value& val)
-{
-}
-
-rapidjson::Value StopMining::Response::toJson(rapidjson::Document& doc) const
-{
-  return Message::toJson(doc);
-}
-
-void StopMining::Response::fromJson(rapidjson::Value& val)
-{
-}
-
-
-rapidjson::Value MiningStatus::Request::toJson(rapidjson::Document& doc) const
-{
-  return Message::toJson(doc);
-}
-
-void MiningStatus::Request::fromJson(rapidjson::Value& val)
-{
-}
-
-rapidjson::Value MiningStatus::Response::toJson(rapidjson::Document& doc) const
-{
-  auto val = Message::toJson(doc);
-
-  auto& al = doc.GetAllocator();
-
-  INSERT_INTO_JSON_OBJECT(val, doc, active, active);
-  INSERT_INTO_JSON_OBJECT(val, doc, speed, speed);
-  INSERT_INTO_JSON_OBJECT(val, doc, threads_count, threads_count);
-  INSERT_INTO_JSON_OBJECT(val, doc, address, address);
-  INSERT_INTO_JSON_OBJECT(val, doc, is_background_mining_enabled, is_background_mining_enabled);
-
-  return val;
-}
-
-void MiningStatus::Response::fromJson(rapidjson::Value& val)
-{
-  GET_FROM_JSON_OBJECT(val, active, active);
-  GET_FROM_JSON_OBJECT(val, speed, speed);
-  GET_FROM_JSON_OBJECT(val, threads_count, threads_count);
-  GET_FROM_JSON_OBJECT(val, address, address);
-  GET_FROM_JSON_OBJECT(val, is_background_mining_enabled, is_background_mining_enabled);
 }
 
 
