@@ -34,6 +34,7 @@ set(wallet_sources
   wallet2.cpp
   wallet_args.cpp
   ringdb.cpp
+  remote_data.cpp
   node_rpc_proxy.cpp)
 
 set(wallet_private_headers
@@ -44,6 +45,7 @@ set(wallet_private_headers
   wallet_rpc_server_commands_defs.h
   wallet_rpc_server_error_codes.h
   ringdb.h
+  remote_data.h
   node_rpc_proxy.h)
 
 xcash_private_headers(wallet

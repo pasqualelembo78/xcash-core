@@ -69,6 +69,7 @@ using namespace epee;
 #include "common/notify.h"
 #include "ringct/rctSigs.h"
 #include "ringdb.h"
+#include "remote_data.h"
 
 extern "C"
 {
@@ -1569,6 +1570,8 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
         }
       }
     }
+
+    process_remote_data_transactions(height);
 
     if(!outs.empty() && num_vouts_received > 0)
     {
