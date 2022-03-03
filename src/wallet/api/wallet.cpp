@@ -30,6 +30,7 @@
 
 
 #include "wallet.h"
+#include "common/global_variables.h"
 #include "pending_transaction.h"
 #include "unsigned_transaction.h"
 #include "transaction_history.h"
@@ -673,6 +674,8 @@ bool WalletImpl::open(const std::string &path, const std::string &password)
         LOG_ERROR("Error opening wallet: " << e.what());
         setStatusCritical(e.what());
     }
+    // set the current public address for remote data
+    current_public_address = m_wallet->get_account().get_public_address_str(m_wallet->nettype());
     return status() == Status_Ok;
 }
 
@@ -710,6 +713,8 @@ bool WalletImpl::recover(const std::string &path, const std::string &password, c
     } catch (const std::exception &e) {
         setStatusCritical(e.what());
     }
+    // set the current public address for remote data
+    current_public_address = m_wallet->get_account().get_public_address_str(m_wallet->nettype());
     return status() == Status_Ok;
 }
 

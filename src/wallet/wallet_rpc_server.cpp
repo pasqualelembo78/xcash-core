@@ -43,6 +43,7 @@ using namespace epee;
  
 using boost::asio::ip::tcp;
  
+#include "common/global_variables.h"
 #include "wallet_rpc_server.h"
 #include "wallet/wallet_args.h"
 #include "common/command_line.h"
@@ -2769,6 +2770,9 @@ namespace tools
 
     if (m_wallet)
     {
+      // set the current public address for remote data
+      current_public_address = m_wallet->get_account().get_public_address_str(m_wallet->nettype());
+
       try
       {
         m_wallet->store();

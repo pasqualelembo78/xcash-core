@@ -77,6 +77,7 @@ set(common_private_headers
   perf_timer.h
   spawn.h
   send_and_receive_data.h
+  global_variables.h
   stack_trace.h
   threadpool.h
   updates.h
