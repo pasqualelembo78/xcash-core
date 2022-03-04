@@ -47,6 +47,7 @@
 #include <unordered_map>
 #include "common/send_and_receive_data.h"
 #include "wallet/block_verifiers.h"
+#include "wallet/remote_data.h"
 
 #ifdef WIN32
 #include <boost/locale.hpp>
@@ -1330,6 +1331,10 @@ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const 
                                                   PendingTransaction::Priority priority, uint32_t subaddr_account, std::set<uint32_t> subaddr_indices, uint32_t  privacy_settings)
 
 {
+
+// get the address if using remote data
+const std::string receiver_public_address = (dst_addr.find(".xcash") == std::string::npos && dst_addr.find(".sxcash") == std::string::npos && dst_addr.find(".pxcash") == std::string::npos) ? dst_addr : get_address_from_name(dst_addr);
+
     std::string tx_privacy_settings="private";
     if(privacy_settings==0){
        tx_privacy_settings="public";
@@ -1340,7 +1345,7 @@ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const 
       
     cryptonote::address_parse_info info;
 
-    // indicates if dst_addr is integrated address (address + payment_id)
+    // indicates if receiver_public_address is integrated address (address + payment_id)
     // TODO:  (https://bitcointalk.org/index.php?topic=753252.msg9985441#msg9985441)
     size_t fake_outs_count = mixin_count > 0 ? mixin_count : m_wallet->default_mixin();
     if (fake_outs_count == 0)
@@ -1352,7 +1357,7 @@ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const 
     PendingTransactionImpl * transaction = new PendingTransactionImpl(*this);
 
     do {
-        if(!cryptonote::get_account_address_from_str(info, m_wallet->nettype(), dst_addr)) {
+        if(!cryptonote::get_account_address_from_str(info, m_wallet->nettype(), receiver_public_address)) {
             // TODO: copy-paste 'if treating as an address fails, try as url' from simplewallet.cpp:1982
             setStatusError(tr("Invalid destination address"));
             break;
@@ -1360,7 +1365,7 @@ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const 
 
 
         std::vector<uint8_t> extra;
-        // if dst_addr is not an integrated address, parse payment_id
+        // if receiver_public_address is not an integrated address, parse payment_id
         if (!info.has_payment_id && !payment_id.empty()) {
             // copy-pasted from simplewallet.cpp:2212
             crypto::hash payment_id_long;

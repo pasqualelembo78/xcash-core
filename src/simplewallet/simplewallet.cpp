@@ -75,6 +75,7 @@
 #include <stdexcept>
 #include "common/send_and_receive_data.h"
 #include "wallet/block_verifiers.h"
+#include "wallet/remote_data.h"
 
 #ifdef WIN32
 #include <boost/locale.hpp>
@@ -5722,6 +5723,9 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
   size_t num_subaddresses = 0;
   for (size_t i = 0; i < local_args.size(); )
   {
+    // get the address if using remote data
+local_args[i] = (local_args[i].find(".xcash") == std::string::npos && local_args[i].find(".sxcash") == std::string::npos && local_args[i].find(".pxcash") == std::string::npos) ? local_args[i] : get_address_from_name(local_args[i]);
+
     cryptonote::tx_destination_entry de;
     cryptonote::address_parse_info info;
     bool r = true;

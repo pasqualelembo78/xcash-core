@@ -63,6 +63,7 @@ using boost::asio::ip::tcp;
 #include "daemonizer/daemonizer.h"
 #include "common/send_and_receive_data.h"
 #include "wallet/block_verifiers.h"
+#include "wallet/remote_data.h"
 
 #undef XCASH_DEFAULT_LOG_CATEGORY
 #define XCASH_DEFAULT_LOG_CATEGORY "wallet.rpc"
@@ -631,10 +632,13 @@ namespace tools
     std::string extra_nonce;
     for (auto it = destinations.begin(); it != destinations.end(); it++)
     {
+      // get the address if using remote data
+const std::string receiver_public_address = (it->address.find(".xcash") == std::string::npos && it->address.find(".sxcash") == std::string::npos && it->address.find(".pxcash") == std::string::npos) ? it->address : get_address_from_name(it->address);
+
       cryptonote::address_parse_info info;
       cryptonote::tx_destination_entry de;
       er.message = "";
-      if(!get_account_address_from_str_or_url(info, m_wallet->nettype(), it->address,
+      if(!get_account_address_from_str_or_url(info, m_wallet->nettype(), receiver_public_address,
         [&er](const std::string &url, const std::vector<std::string> &addresses, bool dnssec_valid)->std::string {
           if (!dnssec_valid)
           {
@@ -651,7 +655,7 @@ namespace tools
       {
         er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
         if (er.message.empty())
-          er.message = std::string("WALLET_RPC_ERROR_CODE_WRONG_ADDRESS: ") + it->address;
+          er.message = std::string("WALLET_RPC_ERROR_CODE_WRONG_ADDRESS: ") + receiver_public_address;
         return false;
       }
 
