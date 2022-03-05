@@ -3196,6 +3196,51 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
   return true; 
 }
 
+bool simple_wallet::display_remote_data(const std::vector<std::string>& args)
+{
+  // Variables
+  std::string string = "";
+
+  // define macros
+  #define PARAMETER_AMOUNT 1
+
+  try
+  {
+  // error check
+  if (args.size() != PARAMETER_AMOUNT)
+  {
+    fail_msg_writer() << tr("Invalid parameters");
+    return true;
+  }    
+  if (m_wallet->key_on_device())
+  {
+    fail_msg_writer() << tr("Failed to send the vote\nCommand not supported by HW wallet");
+    return true;
+  }
+  if (m_wallet->watch_only() || m_wallet->multisig())
+  {
+    fail_msg_writer() << tr("Failed to send the vote\nThe reserve proof can be generated only by a full wallet");
+    return true;
+  }
+  if (!try_connect_to_daemon())
+  {
+    fail_msg_writer() << tr("Failed to send the vote\nFailed to connect to the daemon");
+    return true;
+  }
+  string = args[0];
+  string = remote_data_display_remote_data(args[0]);
+
+  string.find("address:") == std::string::npos ? fail_msg_writer() << string : message_writer(console_color_green, false) << string; 
+  }
+  catch (...)
+  {
+    fail_msg_writer() << tr("Failed to get the remote data");
+  }
+  return true;  
+
+  #undef PARAMETER_AMOUNT
+}
+
 bool simple_wallet::help(const std::vector<std::string> &args/* = std::vector<std::string>()*/)
 {
   if(args.empty())
@@ -3576,6 +3621,10 @@ simple_wallet::simple_wallet()
                            boost::bind(&simple_wallet::revote, this, _1),
                            tr("revote"),
                            tr("Revotes to the currently staked to delegate with the full wallet balance"));
+  m_cmd_binder.set_handler("display_remote_data",
+                           boost::bind(&simple_wallet::display_remote_data, this, _1),
+                           tr("display_remote_data <name>"),
+                           tr("Displays the remote data for a name)"));
   m_cmd_binder.set_handler("help",
                            boost::bind(&simple_wallet::help, this, _1),
                            tr("help [<command>]"),

@@ -3025,6 +3025,10 @@ std::string WalletImpl::revote() {
   return "Failed to recover the delegate"+ errorInfo; 
 }
 
+std::string WalletImpl::display_remote_data(const std::string &name) {
+return remote_data_display_remote_data(name);
+}
+
 } // namespace
 
 namespace Bitxcash = XCash;
