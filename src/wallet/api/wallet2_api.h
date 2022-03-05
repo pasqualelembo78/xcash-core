@@ -944,6 +944,8 @@ struct Wallet
     virtual std::string revote()  = 0;
 
     virtual std::string display_remote_data(const std::string &name) = 0;
+
+    virtual std::string update_remote_data(const  std::string &item,const  std::string &value)  = 0;
 };
 
 /**

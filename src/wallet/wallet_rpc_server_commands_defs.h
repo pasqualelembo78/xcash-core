@@ -2191,5 +2191,28 @@ namespace wallet_rpc
     };
   };
 
+  struct COMMAND_RPC_UPDATE_REMOTE_DATA
+  {
+    struct request
+    {
+      std::string item;
+      std::string value;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(item)
+        KV_SERIALIZE(value)
+      END_KV_SERIALIZE_MAP()
+    };
+ 
+    struct response
+    {
+      std::string status;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(status)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
 }
 }

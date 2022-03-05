@@ -1,14 +1,26 @@
-#include <string>
 #include "remote_data.h"
-#include "common/global_variables.h"
-#include "common/send_and_receive_data.h"
-#include "string_tools.h"
-#include "cryptonote_basic/cryptonote_basic.h"
-#include "cryptonote_protocol/cryptonote_protocol_defs.h"
-
-using namespace epee;
 
 std::string current_public_address;
+
+void remote_data_sync_minutes_and_seconds(const bool display_settings)
+{
+  // Variables
+  std::time_t current_date_and_time;
+  std::tm* current_UTC_date_and_time;
+
+  !display_settings ? std::cout << "Waiting until the next valid data interval, this will be less than 10 minutes. Please leave the wallet open until this time and you receive a confirmation" : tools::scoped_message_writer(console_color_yellow, false) << "Waiting until the next valid data interval, this will be less than 10 minutes. Please leave the wallet open until this time and you receive a confirmation";
+
+  do
+  {
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    current_date_and_time = std::time(0);
+    current_UTC_date_and_time = std::gmtime(&current_date_and_time);
+  } while (current_UTC_date_and_time->tm_min % 60 >= 0 && current_UTC_date_and_time->tm_min % 60 < 10);  
+ 
+  // wait a random amount of time, so all messages from delegates that have been waiting dont get sent at the same time
+  std::this_thread::sleep_for(std::chrono::milliseconds(rand() % (SOCKET_CONNECTION_MAXIMUM_BUFFER_SETTINGS - SOCKET_CONNECTION_MINIMUM_BUFFER_SETTINGS + 1) + SOCKET_CONNECTION_MINIMUM_BUFFER_SETTINGS));
+  return;
+}
 
 std::string get_remote_data_address_settings(std::string public_address)
 {

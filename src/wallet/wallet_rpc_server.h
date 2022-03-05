@@ -150,6 +150,7 @@ namespace tools
         MAP_JON_RPC_WE("vote_status",               on_vote_status,               wallet_rpc::COMMAND_RPC_VOTE_STATUS)
         MAP_JON_RPC_WE("revote",               on_revote,               wallet_rpc::COMMAND_RPC_REVOTE)
         MAP_JON_RPC_WE("display_remote_data",               on_display_remote_data,               wallet_rpc::COMMAND_RPC_DISPLAY_REMOTE_DATA)
+        MAP_JON_RPC_WE("update_remote_data",               on_update_remote_data,               wallet_rpc::COMMAND_RPC_UPDATE_REMOTE_DATA)
       END_JSON_RPC_MAP()
     END_URI_MAP2()
 
@@ -233,6 +234,7 @@ namespace tools
       bool on_vote_status(const wallet_rpc::COMMAND_RPC_VOTE_STATUS::request& req, wallet_rpc::COMMAND_RPC_VOTE_STATUS::response& res, epee::json_rpc::error& er);
       bool on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request& req, wallet_rpc::COMMAND_RPC_REVOTE::response& res, epee::json_rpc::error& er);
       bool on_display_remote_data(const wallet_rpc::COMMAND_RPC_DISPLAY_REMOTE_DATA::request& req, wallet_rpc::COMMAND_RPC_DISPLAY_REMOTE_DATA::response& res, epee::json_rpc::error& er);
+      bool on_update_remote_data(const wallet_rpc::COMMAND_RPC_UPDATE_REMOTE_DATA::request& req, wallet_rpc::COMMAND_RPC_UPDATE_REMOTE_DATA::response& res, epee::json_rpc::error& er);
 
       //json rpc v2
       bool on_query_key(const wallet_rpc::COMMAND_RPC_QUERY_KEY::request& req, wallet_rpc::COMMAND_RPC_QUERY_KEY::response& res, epee::json_rpc::error& er);
