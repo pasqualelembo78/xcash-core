@@ -2214,5 +2214,51 @@ namespace wallet_rpc
     };
   };
 
+  struct COMMAND_RPC_REMOTE_DATA_SAVE_NAME
+  {
+    struct request
+    {
+      std::string name;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(name)
+      END_KV_SERIALIZE_MAP()
+    };
+ 
+    struct response
+    {
+      std::string status;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(status)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
+struct COMMAND_RPC_REMOTE_DATA_PURCHASE_NAME
+  {
+    struct request
+    {
+      std::string saddress;
+      std::string paddress;
+      std::string tx_hash;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(saddress)
+        KV_SERIALIZE(paddress)
+        KV_SERIALIZE(tx_hash)
+      END_KV_SERIALIZE_MAP()
+    };
+ 
+    struct response
+    {
+      std::string status;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(status)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
 }
 }
