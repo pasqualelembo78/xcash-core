@@ -4321,7 +4321,7 @@ bool wallet_rpc_server::on_update_remote_data(const wallet_rpc::COMMAND_RPC_UPDA
   }
 
   // wait until the next valid data time
-  remote_data_sync_minutes_and_seconds(false);
+  remote_data_sync_minutes_and_seconds(0,false);
 
   // get the current block verifiers list
   if ((string = get_current_block_verifiers_list()) == "")
@@ -4458,7 +4458,7 @@ bool wallet_rpc_server::on_remote_data_save_name(const wallet_rpc::COMMAND_RPC_R
   }
 
   // wait until the next valid data time
-  remote_data_sync_minutes_and_seconds(false);
+  remote_data_sync_minutes_and_seconds(1,false);
 
   // get the current block verifiers list
   if ((string = get_current_block_verifiers_list()) == "")
@@ -4595,7 +4595,7 @@ bool wallet_rpc_server::on_remote_data_purchase_name(const wallet_rpc::COMMAND_R
   }
 
   // wait until the next valid data time
-  remote_data_sync_minutes_and_seconds(false);
+  remote_data_sync_minutes_and_seconds(0,false);
 
   // get the current block verifiers list
   if ((string = get_current_block_verifiers_list()) == "")

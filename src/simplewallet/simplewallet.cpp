@@ -3302,7 +3302,7 @@ bool simple_wallet::update_remote_data(const std::vector<std::string>& args)
     SCOPED_WALLET_UNLOCK();
 
     // wait until the next valid data time
-    remote_data_sync_minutes_and_seconds(true);
+    remote_data_sync_minutes_and_seconds(0,true);
 
     // get the current block verifiers list
     if ((string = get_current_block_verifiers_list()) == "")
@@ -3450,7 +3450,7 @@ bool simple_wallet::remote_data_save_name(const std::vector<std::string>& args)
     SCOPED_WALLET_UNLOCK();
 
     // wait until the next valid data time
-    remote_data_sync_minutes_and_seconds(true);
+    remote_data_sync_minutes_and_seconds(1,true);
 
     // get the current block verifiers list
     if ((string = get_current_block_verifiers_list()) == "")
@@ -3598,7 +3598,7 @@ bool simple_wallet::remote_data_purchase_name(const std::vector<std::string>& ar
     SCOPED_WALLET_UNLOCK();
 
     // wait until the next valid data time
-    remote_data_sync_minutes_and_seconds(true);
+    remote_data_sync_minutes_and_seconds(0,true);
 
     // get the current block verifiers list
     if ((string = get_current_block_verifiers_list()) == "")

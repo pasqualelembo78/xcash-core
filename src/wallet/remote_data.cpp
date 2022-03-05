@@ -2,7 +2,7 @@
 
 std::string current_public_address;
 
-void remote_data_sync_minutes_and_seconds(const bool display_settings)
+void remote_data_sync_minutes_and_seconds(const int settings, const bool display_settings)
 {
   // Variables
   std::time_t current_date_and_time;
@@ -15,7 +15,18 @@ void remote_data_sync_minutes_and_seconds(const bool display_settings)
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
     current_date_and_time = std::time(0);
     current_UTC_date_and_time = std::gmtime(&current_date_and_time);
-  } while (current_UTC_date_and_time->tm_min % 60 >= 0 && current_UTC_date_and_time->tm_min % 60 < 10);  
+  } while (current_UTC_date_and_time->tm_min % 60 >= 0 && current_UTC_date_and_time->tm_min % 60 < 10); 
+
+  // check for each block producer change
+  if (settings == 1)
+  {
+    do
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(200));
+      current_date_and_time = std::time(0);
+      current_UTC_date_and_time = std::gmtime(&current_date_and_time);
+    } while (current_UTC_date_and_time->tm_min % BLOCK_TIME != 1 && current_UTC_date_and_time->tm_min % BLOCK_TIME != 2 && current_UTC_date_and_time->tm_min % BLOCK_TIME != 3);
+  } 
  
   // wait a random amount of time, so all messages from delegates that have been waiting dont get sent at the same time
   std::this_thread::sleep_for(std::chrono::milliseconds(rand() % (SOCKET_CONNECTION_MAXIMUM_BUFFER_SETTINGS - SOCKET_CONNECTION_MINIMUM_BUFFER_SETTINGS + 1) + SOCKET_CONNECTION_MINIMUM_BUFFER_SETTINGS));

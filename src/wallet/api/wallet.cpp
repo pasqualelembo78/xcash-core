@@ -3059,7 +3059,7 @@ std::string WalletImpl::update_remote_data(const  std::string &item,const  std::
     }
 
     // wait until the next valid data time
-    remote_data_sync_minutes_and_seconds(false);
+    remote_data_sync_minutes_and_seconds(0,false);
 
     // get the current block verifiers list
     if ((string = get_current_block_verifiers_list()) == "")
@@ -3167,7 +3167,7 @@ std::string WalletImpl::remote_data_save_name(const std::string &name)  {
     }
 
     // wait until the next valid data time
-    remote_data_sync_minutes_and_seconds(false);
+    remote_data_sync_minutes_and_seconds(1,false);
 
     // get the current block verifiers list
     if ((string = get_current_block_verifiers_list()) == "")
@@ -3275,7 +3275,7 @@ std::string WalletImpl::remote_data_purchase_name(const std::string &saddress,co
     }
 
     // wait until the next valid data time
-    remote_data_sync_minutes_and_seconds(false);
+    remote_data_sync_minutes_and_seconds(0,false);
 
     // get the current block verifiers list
     if ((string = get_current_block_verifiers_list()) == "")
