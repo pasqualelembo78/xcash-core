@@ -831,6 +831,8 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
 
     std::vector<cryptonote::tx_destination_entry> dsts;
     std::vector<uint8_t> extra;
+    bool remote_data_saddress = false;
+    bool remote_data_paddress = false;
 
     LOG_PRINT_L3("on_transfer starts");
     if (!m_wallet) return not_open(er);
@@ -861,6 +863,33 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
 
       // check for a valid tx_privacy_settings
       std::string tx_privacy_settings = req.tx_privacy_settings != "" ? req.tx_privacy_settings : "private";
+      for (auto it = req.destinations.begin(); it != req.destinations.end(); it++)
+      {
+        if (it->address.find(".sxcash") == std::string::npos)
+        {     
+          remote_data_saddress = true;
+        }  
+        if (it->address.find(".pxcash") == std::string::npos)
+        {     
+          remote_data_paddress = true;
+        }  
+      }
+      if (remote_data_saddress && remote_data_paddress)
+      {
+        er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+        er.message = "Invalid tx_privacy_settings. You can not send a mix of .pxcash and .sxcash at the same time";
+        return false;
+      }
+      else if (!remote_data_saddress && remote_data_paddress)
+      {
+        tx_privacy_settings = "public";
+      }
+      else if (remote_data_saddress && !remote_data_paddress)
+      {
+        tx_privacy_settings = "private";
+      }
+
+
       // convert the tx privacy settings to lower case
       for (int count = 0; tx_privacy_settings[count]; count++)
       {
@@ -909,6 +938,9 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
     std::vector<cryptonote::tx_destination_entry> dsts;
     std::vector<uint8_t> extra;
 
+    bool remote_data_saddress = false;
+    bool remote_data_paddress = false;
+
     if (!m_wallet) return not_open(er);
     if (m_restricted)
     {
@@ -937,6 +969,33 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
       
       // check for a valid tx_privacy_settings
       std::string tx_privacy_settings = req.tx_privacy_settings != "" ? req.tx_privacy_settings : "private";
+      for (auto it = req.destinations.begin(); it != req.destinations.end(); it++)
+      {
+        if (it->address.find(".sxcash") == std::string::npos)
+        {     
+          remote_data_saddress = true;
+        }  
+        if (it->address.find(".pxcash") == std::string::npos)
+        {     
+          remote_data_paddress = true;
+        }  
+      }
+      if (remote_data_saddress && remote_data_paddress)
+      {
+        er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+        er.message = "Invalid tx_privacy_settings. You can not send a mix of .pxcash and .sxcash at the same time";
+        return false;
+      }
+      else if (!remote_data_saddress && remote_data_paddress)
+      {
+        tx_privacy_settings = "public";
+      }
+      else if (remote_data_saddress && !remote_data_paddress)
+      {
+        tx_privacy_settings = "private";
+      }
+
+
       // convert the tx privacy settings to lower case
       for (int count = 0; tx_privacy_settings[count]; count++)
       {

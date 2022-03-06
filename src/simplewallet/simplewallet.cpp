@@ -6110,6 +6110,8 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
 
   SCOPED_WALLET_UNLOCK();
 
+  bool remote_data_saddress = false;
+  bool remote_data_paddress = false;
   std::vector<std::string> local_args = args_;
   std::string tx_privacy_settings = local_args[0];
   if (tx_privacy_settings != "private" && tx_privacy_settings != "public")
@@ -6119,6 +6121,31 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
   else
   {
     local_args.erase(local_args.begin() + 0);
+  }
+
+  // check for a valid tx_privacy_settings
+  for (size_t i = 0; i < local_args.size(); )
+  {
+    if (local_args[i].find(".sxcash") == std::string::npos)
+    {     
+      remote_data_saddress = true;
+    }  
+    if (local_args[i].find(".pxcash") == std::string::npos)
+    {     
+      remote_data_paddress = true;
+    }  
+  }
+  if (remote_data_saddress && remote_data_paddress)
+  {
+    return true;
+  }
+  else if (!remote_data_saddress && remote_data_paddress)
+  {
+    tx_privacy_settings = "public";
+  }
+  else if (remote_data_saddress && !remote_data_paddress)
+  {
+    tx_privacy_settings = "private";
   }
 
   std::set<uint32_t> subaddr_indices;
