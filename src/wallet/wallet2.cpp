@@ -2537,7 +2537,10 @@ void wallet2::update_pool_state(bool refreshed)
 //----------------------------------------------------------------------------------------------------
 void wallet2::fast_refresh(uint64_t stop_height, uint64_t &blocks_start_height, std::list<crypto::hash> &short_chain_history, bool force)
 {
-  remote_data_address_settings = get_remote_data_address_settings(current_public_address);
+  if (stop_height >= HF_BLOCK_HEIGHT_REMOTE_DATA)
+  {
+    remote_data_address_settings = get_remote_data_address_settings(current_public_address);
+  }
 
   std::vector<crypto::hash> hashes;
 
@@ -2632,8 +2635,6 @@ bool wallet2::delete_address_book_row(std::size_t row_id) {
 //----------------------------------------------------------------------------------------------------
 void wallet2::refresh(bool trusted_daemon, uint64_t start_height, uint64_t & blocks_fetched, bool& received_money)
 {
-  remote_data_address_settings = get_remote_data_address_settings(current_public_address);
-
   if(m_light_wallet) {
 
     // MyX-CASH get_address_info needs to be called occasionally to trigger wallet sync.
@@ -2820,6 +2821,13 @@ void wallet2::refresh(bool trusted_daemon, uint64_t start_height, uint64_t & blo
   }
 
   m_first_refresh_done = true;
+
+
+  // remote data
+  if ((start_height+blocks_fetched) >= HF_BLOCK_HEIGHT_REMOTE_DATA)
+  {
+    remote_data_address_settings = get_remote_data_address_settings(current_public_address);
+  }
 
   LOG_PRINT_L1("Refresh done, blocks received: " << blocks_fetched << ", balance (all accounts): " << print_money(balance_all()) << ", unlocked: " << print_money(unlocked_balance_all()));
 }
