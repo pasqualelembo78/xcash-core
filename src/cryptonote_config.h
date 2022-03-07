@@ -254,7 +254,7 @@ full_addrs.insert(SEED_NODE_5);
 
 
 // Updates data
-#define BLOCK_HEIGHT_SF_V_2_1_0 8000000 // stealth address verification
+#define BLOCK_HEIGHT_SF_V_2_1_0 895300 // stealth address verification
 
 
 // Network data nodes
