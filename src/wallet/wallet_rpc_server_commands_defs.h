@@ -2260,5 +2260,65 @@ struct COMMAND_RPC_REMOTE_DATA_PURCHASE_NAME
     };
   };
 
+struct COMMAND_RPC_REMOTE_DATA_DELEGATES_SET_AMOUNT
+  {
+    struct request
+    {
+      std::string amount;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(amount)
+      END_KV_SERIALIZE_MAP()
+    };
+ 
+    struct response
+    {
+      std::string status;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(status)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
+  struct COMMAND_RPC_REMOTE_DATA_RENEWAL_START
+  {
+    struct request
+    {
+      BEGIN_KV_SERIALIZE_MAP()
+      END_KV_SERIALIZE_MAP()
+    };
+ 
+    struct response
+    {
+      std::string status;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(status)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
+struct COMMAND_RPC_REMOTE_DATA_RENEWAL_END
+  {
+    struct request
+    {
+      std::string tx_hash;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(tx_hash)
+      END_KV_SERIALIZE_MAP()
+    };
+ 
+    struct response
+    {
+      std::string status;
+ 
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(status)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
 }
 }

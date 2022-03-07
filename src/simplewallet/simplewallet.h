@@ -231,7 +231,10 @@ namespace cryptonote
     bool display_remote_data(const std::vector<std::string>& args);
     bool update_remote_data(const std::vector<std::string>& args); 
     bool remote_data_save_name(const std::vector<std::string>& args);
-    bool remote_data_purchase_name(const std::vector<std::string>& args);   
+    bool remote_data_purchase_name(const std::vector<std::string>& args);  
+    bool remote_data_delegates_set_amount(const std::vector<std::string>& args); 
+    bool remote_data_renewal_start(const std::vector<std::string>& args);
+    bool remote_data_renewal_end(const std::vector<std::string>& args);  
 
     uint64_t get_daemon_blockchain_height(std::string& err);
     bool try_connect_to_daemon(bool silent = false, uint32_t* version = nullptr);

@@ -3356,6 +3356,318 @@ std::string WalletImpl::remote_data_purchase_name(const std::string &saddress,co
   return "Failed to purchase the name"+ errorInfo;  
  }
 
+std::string WalletImpl::remote_data_delegates_set_amount(const  std::string &amount)  {
+  // Variables
+  std::string public_address = "";
+  tools::wallet2::transfer_container transfers;
+  std::string block_verifiers_IP_address[BLOCK_VERIFIERS_TOTAL_AMOUNT]; // The block verifiers IP address
+  std::string string = "";
+  std::string data2 = "";
+  std::string data3 = ""; 
+  std::size_t count; 
+  std::size_t count2;
+  std::size_t count3;
+  std::size_t total_delegates;
+  std::size_t total_delegates_valid_amount;
+  std::string errorInfo= ":";
+  uint64_t current_block_height;
+
+  try
+  {
+    // check if the amount is valid
+    if (amount.empty() || amount.find_first_not_of("0123456789") != std::string::npos)
+    {
+      return "Failed to update the remote data amount";  
+    }
+
+    // wait until the next valid data time
+    remote_data_sync_minutes_and_seconds(0,false);
+
+    // get the current block verifiers list
+    if ((string = get_current_block_verifiers_list()) == "")
+    {
+      return "Failed to update the remote data amount"; 
+    }
+
+    total_delegates = std::count(string.begin(), string.end(), '|') / 3;
+    if (total_delegates > BLOCK_VERIFIERS_AMOUNT)
+    {
+      total_delegates = BLOCK_VERIFIERS_AMOUNT;
+    }
+    total_delegates_valid_amount = ceil(total_delegates * BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE);
+
+    // initialize the current_block_verifiers_list struct
+    for (count = 0, count2 = string.find("block_verifiers_IP_address_list")+35, count3 = 0; count < total_delegates; count++)
+    {
+      count3 = string.find("|",count2);
+      block_verifiers_IP_address[count] = string.substr(count2,count3 - count2);
+      count2 = count3 + 1;
+    }
+ 
+    // get the wallet transfers   
+    m_wallet->get_transfers(transfers);
+
+    // get the wallets public address
+    auto print_address_sub = [this, &transfers, &public_address]()
+      {
+        bool used = std::find_if(
+          transfers.begin(), transfers.end(),
+          [this](const tools::wallet2::transfer_details& td) {
+            return td.m_subaddr_index == cryptonote::subaddress_index{ 0, 0 };
+          }) != transfers.end();
+          public_address = m_wallet->get_subaddress_as_str({0, 0});
+      };
+      print_address_sub();
+  
+    if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+    {
+    return "Failed to update the remote data amount\nInvalid public address. Only XCA addresses are allowed";  
+    }
+
+    // get the current block height
+    current_block_height = m_wallet->get_blockchain_current_height();
+  
+    // create the data
+    data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_DELEGATES_SET_AMOUNT|" + amount + "|" + public_address + "|";
+ 
+    // sign the data    
+    data3 = m_wallet->sign(data2);
+
+    data2 += data3 + "|";
+
+    // send the data to all block verifiers
+    for (count = 0, count2 = 0, count3 = 0; count < total_delegates; count++)
+    {
+    std::string result=  send_and_receive_data(block_verifiers_IP_address[count],data2,SEND_OR_RECEIVE_SOCKET_DATA_TIMEOUT_SETTINGS*2);
+    if (result=="Set the amount")
+    {
+      count2++;
+      errorInfo+= block_verifiers_IP_address[count]+"__Success"+"|";
+      if (block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_1 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_2 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_3 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_4 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_5)
+      {
+        count3++;
+      }
+    }else{
+      errorInfo+= block_verifiers_IP_address[count]+"__"+result + "|";
+    }     
+    }
+
+    // check the result of the data (allow for data to be valid if a majority of seed nodes accepted the data during registration mode, as this is when only the seed nodes will check the majority every block time)
+    if ((count2 >= total_delegates_valid_amount) || (current_block_height < HF_BLOCK_HEIGHT_PROOF_OF_STAKE && count3 >= (NETWORK_DATA_NODES_AMOUNT-1)))
+    {
+    return "Success";        
+    } 
+  }catch (const std::exception &e) {
+    LOG_ERROR("Failed to update the remote data amount: " << e.what());
+  }
+
+  return "Failed to update the remote data amount"+ errorInfo;  
+ }
+
+std::string WalletImpl::remote_data_renewal_start()  {
+  // Variables
+  std::string public_address = "";
+  tools::wallet2::transfer_container transfers;
+  std::string block_verifiers_IP_address[BLOCK_VERIFIERS_TOTAL_AMOUNT]; // The block verifiers IP address
+  std::string string = "";
+  std::string data2 = "";
+  std::string data3 = ""; 
+  std::size_t count; 
+  std::size_t count2;
+  std::size_t count3;
+  std::size_t total_delegates;
+  std::size_t total_delegates_valid_amount;
+  std::string errorInfo= ":";
+  uint64_t current_block_height;
+
+  try
+  {
+    // wait until the next valid data time
+    remote_data_sync_minutes_and_seconds(1,false);
+
+    // get the current block verifiers list
+    if ((string = get_current_block_verifiers_list()) == "")
+    {
+      return "Failed to start the renewal process"; 
+    }
+
+    total_delegates = std::count(string.begin(), string.end(), '|') / 3;
+    if (total_delegates > BLOCK_VERIFIERS_AMOUNT)
+    {
+      total_delegates = BLOCK_VERIFIERS_AMOUNT;
+    }
+    total_delegates_valid_amount = ceil(total_delegates * BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE);
+
+    // initialize the current_block_verifiers_list struct
+    for (count = 0, count2 = string.find("block_verifiers_IP_address_list")+35, count3 = 0; count < total_delegates; count++)
+    {
+      count3 = string.find("|",count2);
+      block_verifiers_IP_address[count] = string.substr(count2,count3 - count2);
+      count2 = count3 + 1;
+    }
+ 
+    // get the wallet transfers   
+    m_wallet->get_transfers(transfers);
+
+    // get the wallets public address
+    auto print_address_sub = [this, &transfers, &public_address]()
+      {
+        bool used = std::find_if(
+          transfers.begin(), transfers.end(),
+          [this](const tools::wallet2::transfer_details& td) {
+            return td.m_subaddr_index == cryptonote::subaddress_index{ 0, 0 };
+          }) != transfers.end();
+          public_address = m_wallet->get_subaddress_as_str({0, 0});
+      };
+      print_address_sub();
+  
+    if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+    {
+    return "Failed to start the renewal process\nInvalid public address. Only XCA addresses are allowed";  
+    }
+
+    // get the current block height
+    current_block_height = m_wallet->get_blockchain_current_height();
+  
+    // create the data
+    data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_RENEWAL_START|" + public_address + "|";
+ 
+    // sign the data    
+    data3 = m_wallet->sign(data2);
+
+    data2 += data3 + "|";
+
+    // send the data to all block verifiers
+    for (count = 0, count2 = 0, count3 = 0; count < total_delegates; count++)
+    {
+    std::string result=  send_and_receive_data(block_verifiers_IP_address[count],data2,SEND_OR_RECEIVE_SOCKET_DATA_TIMEOUT_SETTINGS*2);
+    if (result=="Started to renew the name")
+    {
+      count2++;
+      errorInfo+= block_verifiers_IP_address[count]+"__Success"+"|";
+      if (block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_1 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_2 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_3 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_4 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_5)
+      {
+        count3++;
+      }
+    }else{
+      errorInfo+= block_verifiers_IP_address[count]+"__"+result + "|";
+    }     
+    }
+
+    // check the result of the data (allow for data to be valid if a majority of seed nodes accepted the data during registration mode, as this is when only the seed nodes will check the majority every block time)
+    if ((count2 >= total_delegates_valid_amount) || (current_block_height < HF_BLOCK_HEIGHT_PROOF_OF_STAKE && count3 >= (NETWORK_DATA_NODES_AMOUNT-1)))
+    {
+    return "Success";        
+    } 
+  }catch (const std::exception &e) {
+    LOG_ERROR("Failed to save the name: " << e.what());
+  }
+
+  return "Failed to save the name"+ errorInfo;  
+ }
+
+std::string WalletImpl::remote_data_renewal_end(const std::string &tx_hash)  {
+  // Variables
+  std::string public_address = "";
+  tools::wallet2::transfer_container transfers;
+  std::string block_verifiers_IP_address[BLOCK_VERIFIERS_TOTAL_AMOUNT]; // The block verifiers IP address
+  std::string string = "";
+  std::string data2 = "";
+  std::string data3 = ""; 
+  std::size_t count; 
+  std::size_t count2;
+  std::size_t count3;
+  std::size_t total_delegates;
+  std::size_t total_delegates_valid_amount;
+  std::string errorInfo= ":";
+  uint64_t current_block_height;
+
+  try
+  {
+    // wait until the next valid data time
+    remote_data_sync_minutes_and_seconds(0,false);
+
+    // get the current block verifiers list
+    if ((string = get_current_block_verifiers_list()) == "")
+    {
+      return "Failed to renew the name"; 
+    }
+
+    total_delegates = std::count(string.begin(), string.end(), '|') / 3;
+    if (total_delegates > BLOCK_VERIFIERS_AMOUNT)
+    {
+      total_delegates = BLOCK_VERIFIERS_AMOUNT;
+    }
+    total_delegates_valid_amount = ceil(total_delegates * BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE);
+
+    // initialize the current_block_verifiers_list struct
+    for (count = 0, count2 = string.find("block_verifiers_IP_address_list")+35, count3 = 0; count < total_delegates; count++)
+    {
+      count3 = string.find("|",count2);
+      block_verifiers_IP_address[count] = string.substr(count2,count3 - count2);
+      count2 = count3 + 1;
+    }
+ 
+    // get the wallet transfers   
+    m_wallet->get_transfers(transfers);
+
+    // get the wallets public address
+    auto print_address_sub = [this, &transfers, &public_address]()
+      {
+        bool used = std::find_if(
+          transfers.begin(), transfers.end(),
+          [this](const tools::wallet2::transfer_details& td) {
+            return td.m_subaddr_index == cryptonote::subaddress_index{ 0, 0 };
+          }) != transfers.end();
+          public_address = m_wallet->get_subaddress_as_str({0, 0});
+      };
+      print_address_sub();
+  
+    if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+    {
+    return "Failed to renew the name\nInvalid public address. Only XCA addresses are allowed";  
+    }
+
+    // get the current block height
+    current_block_height = m_wallet->get_blockchain_current_height();
+  
+    // create the data
+    data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_RENEWAL_END|" + tx_hash + "|" + public_address + "|";
+ 
+    // sign the data    
+    data3 = m_wallet->sign(data2);
+
+    data2 += data3 + "|";
+
+    // send the data to all block verifiers
+    for (count = 0, count2 = 0, count3 = 0; count < total_delegates; count++)
+    {
+    std::string result=  send_and_receive_data(block_verifiers_IP_address[count],data2,SEND_OR_RECEIVE_SOCKET_DATA_TIMEOUT_SETTINGS*2);
+    if (result=="Renewed the name")
+    {
+      count2++;
+      errorInfo+= block_verifiers_IP_address[count]+"__Success"+"|";
+      if (block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_1 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_2 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_3 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_4 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_5)
+      {
+        count3++;
+      }
+    }else{
+      errorInfo+= block_verifiers_IP_address[count]+"__"+result + "|";
+    }     
+    }
+
+    // check the result of the data (allow for data to be valid if a majority of seed nodes accepted the data during registration mode, as this is when only the seed nodes will check the majority every block time)
+    if ((count2 >= total_delegates_valid_amount) || (current_block_height < HF_BLOCK_HEIGHT_PROOF_OF_STAKE && count3 >= (NETWORK_DATA_NODES_AMOUNT-1)))
+    {
+    return "Success";        
+    } 
+  }catch (const std::exception &e) {
+    LOG_ERROR("Failed to renew the name: " << e.what());
+  }
+
+  return "Failed to renew the name"+ errorInfo;  
+ }
+
 } // namespace
 
 namespace Bitxcash = XCash;

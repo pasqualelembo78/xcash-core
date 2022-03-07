@@ -950,6 +950,12 @@ struct Wallet
     virtual std::string remote_data_save_name(const std::string &name)  = 0;
 
     virtual std::string remote_data_purchase_name(const std::string &saddress,const std::string &paddress,const std::string &tx_hash)  = 0;
+
+    virtual std::string remote_data_delegates_set_amount(const  std::string &amount)  = 0;
+
+    virtual std::string remote_data_renewal_start()  = 0;
+
+    virtual std::string remote_data_renewal_end(const std::string &tx_hash)  = 0;
 };
 
 /**

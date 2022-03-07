@@ -4747,6 +4747,404 @@ bool wallet_rpc_server::on_remote_data_purchase_name(const wallet_rpc::COMMAND_R
   return true;
 }
 
+bool wallet_rpc_server::on_remote_data_delegates_set_amount(const wallet_rpc::COMMAND_RPC_REMOTE_DATA_DELEGATES_SET_AMOUNT::request& req, wallet_rpc::COMMAND_RPC_REMOTE_DATA_DELEGATES_SET_AMOUNT::response& res, epee::json_rpc::error& er)
+{
+  
+  // Variables
+  std::string public_address = "";
+  tools::wallet2::transfer_container transfers;
+  std::string block_verifiers_IP_address[BLOCK_VERIFIERS_TOTAL_AMOUNT]; // The block verifiers IP address
+  std::string string = "";
+  std::string data2 = "";
+  std::string data3 = ""; 
+  std::size_t count; 
+  std::size_t count2;
+  std::size_t count3;
+  std::size_t total_delegates;
+  std::size_t total_delegates_valid_amount;
+  uint64_t current_block_height;
+
+  try
+  {
+  // check if the wallet is open
+  if (!m_wallet) return not_open(er);
+
+  // error check
+  if (m_wallet->key_on_device())
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to update the remote data amount";
+    return false;
+  }
+  if (m_wallet->watch_only() || m_wallet->multisig())
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to update the remote data amount";
+    return false;
+  }
+
+  // check if the amount is valid
+  if (req.amount.empty() || req.amount.find_first_not_of("0123456789") != std::string::npos)
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to update the remote data amount";
+    return false;
+  }
+
+  // wait until the next valid data time
+  remote_data_sync_minutes_and_seconds(0,false);
+
+  // get the current block verifiers list
+  if ((string = get_current_block_verifiers_list()) == "")
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to update the remote data amount";
+    return false; 
+  }
+
+  total_delegates = std::count(string.begin(), string.end(), '|') / 3;
+  if (total_delegates > BLOCK_VERIFIERS_AMOUNT)
+  {
+    total_delegates = BLOCK_VERIFIERS_AMOUNT;
+  }
+  total_delegates_valid_amount = ceil(total_delegates * BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE);
+
+  // initialize the current_block_verifiers_list struct
+  for (count = 0, count2 = string.find("block_verifiers_IP_address_list")+35, count3 = 0; count < total_delegates; count++)
+  {
+    count3 = string.find("|",count2);
+    block_verifiers_IP_address[count] = string.substr(count2,count3 - count2);
+    count2 = count3 + 1;
+  }
+
+   // get the wallet transfers   
+  m_wallet->get_transfers(transfers);
+
+  // get the wallets public address
+  auto print_address_sub = [this, &transfers, &public_address]()
+    {
+      bool used = std::find_if(
+        transfers.begin(), transfers.end(),
+        [this](const tools::wallet2::transfer_details& td) {
+          return td.m_subaddr_index == cryptonote::subaddress_index{ 0, 0 };
+        }) != transfers.end();
+        public_address = m_wallet->get_subaddress_as_str({0, 0});
+    };
+    print_address_sub();
+  
+  if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+  {
+    er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
+    er.message = "Invalid address";
+    return false;
+  }
+
+  // get the current block height
+  current_block_height = m_wallet->get_blockchain_current_height();
+ 
+  // create the data
+  data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_DELEGATES_SET_AMOUNT|" + req.amount + "|" + public_address + "|";
+  
+  // sign the data    
+  data3 = m_wallet->sign(data2);
+
+  data2 += data3 + "|";
+
+  // send the data to all block verifiers
+  for (count = 0, count2 = 0, count3 = 0; count < total_delegates; count++)
+  {
+    if (send_and_receive_data(block_verifiers_IP_address[count],data2,SEND_OR_RECEIVE_SOCKET_DATA_TIMEOUT_SETTINGS*2) == "Set the amount")
+    {
+      count2++;
+      if (block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_1 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_2 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_3 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_4 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_5)
+      {
+        count3++;
+      }
+    }     
+  }
+
+  // check the result of the data (allow for data to be valid if a majority of seed nodes accepted the data during registration mode, as this is when only the seed nodes will check the majority every block time)
+  if ((count2 >= total_delegates_valid_amount) || (current_block_height < HF_BLOCK_HEIGHT_PROOF_OF_STAKE && count3 >= (NETWORK_DATA_NODES_AMOUNT-1)))
+  {
+    res.status = "success";
+    return true;            
+  } 
+  else
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to update the remote data amount";
+    return false; 
+  } 
+  }
+  catch (...)
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to update the remote data amount";
+    return false;
+  }
+  return true;
+}
+
+bool wallet_rpc_server::on_remote_data_renewal_start(const wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_START::request& req, wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_START::response& res, epee::json_rpc::error& er)
+{
+  
+  // Variables
+  std::string public_address = "";
+  tools::wallet2::transfer_container transfers;
+  std::string block_verifiers_IP_address[BLOCK_VERIFIERS_TOTAL_AMOUNT]; // The block verifiers IP address
+  std::string string = "";
+  std::string data2 = "";
+  std::string data3 = ""; 
+  std::size_t count; 
+  std::size_t count2;
+  std::size_t count3;
+  std::size_t total_delegates;
+  std::size_t total_delegates_valid_amount;
+  uint64_t current_block_height;
+
+  try
+  {
+  // check if the wallet is open
+  if (!m_wallet) return not_open(er);
+
+  // error check
+  if (m_wallet->key_on_device())
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to start the renewal process";
+    return false;
+  }
+  if (m_wallet->watch_only() || m_wallet->multisig())
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to start the renewal process";
+    return false;
+  }
+
+  // wait until the next valid data time
+  remote_data_sync_minutes_and_seconds(1,false);
+
+  // get the current block verifiers list
+  if ((string = get_current_block_verifiers_list()) == "")
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to start the renewal process";
+    return false; 
+  }
+
+  total_delegates = std::count(string.begin(), string.end(), '|') / 3;
+  if (total_delegates > BLOCK_VERIFIERS_AMOUNT)
+  {
+    total_delegates = BLOCK_VERIFIERS_AMOUNT;
+  }
+  total_delegates_valid_amount = ceil(total_delegates * BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE);
+
+  // initialize the current_block_verifiers_list struct
+  for (count = 0, count2 = string.find("block_verifiers_IP_address_list")+35, count3 = 0; count < total_delegates; count++)
+  {
+    count3 = string.find("|",count2);
+    block_verifiers_IP_address[count] = string.substr(count2,count3 - count2);
+    count2 = count3 + 1;
+  }
+
+   // get the wallet transfers   
+  m_wallet->get_transfers(transfers);
+
+  // get the wallets public address
+  auto print_address_sub = [this, &transfers, &public_address]()
+    {
+      bool used = std::find_if(
+        transfers.begin(), transfers.end(),
+        [this](const tools::wallet2::transfer_details& td) {
+          return td.m_subaddr_index == cryptonote::subaddress_index{ 0, 0 };
+        }) != transfers.end();
+        public_address = m_wallet->get_subaddress_as_str({0, 0});
+    };
+    print_address_sub();
+  
+  if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+  {
+    er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
+    er.message = "Invalid address";
+    return false;
+  }
+
+  // get the current block height
+  current_block_height = m_wallet->get_blockchain_current_height();
+ 
+  // create the data
+  data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_RENEWAL_START|" + public_address + "|";
+  
+  // sign the data    
+  data3 = m_wallet->sign(data2);
+
+  data2 += data3 + "|";
+
+  // send the data to all block verifiers
+  for (count = 0, count2 = 0, count3 = 0; count < total_delegates; count++)
+  {
+    if (send_and_receive_data(block_verifiers_IP_address[count],data2,SEND_OR_RECEIVE_SOCKET_DATA_TIMEOUT_SETTINGS*2) == "Started to renew the name")
+    {
+      count2++;
+      if (block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_1 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_2 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_3 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_4 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_5)
+      {
+        count3++;
+      }
+    }     
+  }
+
+  // check the result of the data (allow for data to be valid if a majority of seed nodes accepted the data during registration mode, as this is when only the seed nodes will check the majority every block time)
+  if ((count2 >= total_delegates_valid_amount) || (current_block_height < HF_BLOCK_HEIGHT_PROOF_OF_STAKE && count3 >= (NETWORK_DATA_NODES_AMOUNT-1)))
+  {
+    res.status = "success";
+    return true;            
+  } 
+  else
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to start the renewal process";
+    return false; 
+  } 
+  }
+  catch (...)
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to start the renewal process";
+    return false;
+  }
+  return true;
+}
+
+bool wallet_rpc_server::on_remote_data_renewal_end(const wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_END::request& req, wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_END::response& res, epee::json_rpc::error& er)
+{
+  
+ // Variables
+  std::string public_address = "";
+  tools::wallet2::transfer_container transfers;
+  std::string block_verifiers_IP_address[BLOCK_VERIFIERS_TOTAL_AMOUNT]; // The block verifiers IP address
+  std::string string = "";
+  std::string data2 = "";
+  std::string data3 = ""; 
+  std::size_t count; 
+  std::size_t count2;
+  std::size_t count3;
+  std::size_t total_delegates;
+  std::size_t total_delegates_valid_amount;
+  uint64_t current_block_height;
+
+  try
+  {
+  // check if the wallet is open
+  if (!m_wallet) return not_open(er);
+
+  // error check
+  if (m_wallet->key_on_device())
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to renew the name";
+    return false;
+  }
+  if (m_wallet->watch_only() || m_wallet->multisig())
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to renew the name";
+    return false;
+  }
+
+  // wait until the next valid data time
+  remote_data_sync_minutes_and_seconds(0,false);
+
+  // get the current block verifiers list
+  if ((string = get_current_block_verifiers_list()) == "")
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to renew the remote data";
+    return false; 
+  }
+
+  total_delegates = std::count(string.begin(), string.end(), '|') / 3;
+  if (total_delegates > BLOCK_VERIFIERS_AMOUNT)
+  {
+    total_delegates = BLOCK_VERIFIERS_AMOUNT;
+  }
+  total_delegates_valid_amount = ceil(total_delegates * BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE);
+
+  // initialize the current_block_verifiers_list struct
+  for (count = 0, count2 = string.find("block_verifiers_IP_address_list")+35, count3 = 0; count < total_delegates; count++)
+  {
+    count3 = string.find("|",count2);
+    block_verifiers_IP_address[count] = string.substr(count2,count3 - count2);
+    count2 = count3 + 1;
+  }
+
+   // get the wallet transfers   
+  m_wallet->get_transfers(transfers);
+
+  // get the wallets public address
+  auto print_address_sub = [this, &transfers, &public_address]()
+    {
+      bool used = std::find_if(
+        transfers.begin(), transfers.end(),
+        [this](const tools::wallet2::transfer_details& td) {
+          return td.m_subaddr_index == cryptonote::subaddress_index{ 0, 0 };
+        }) != transfers.end();
+        public_address = m_wallet->get_subaddress_as_str({0, 0});
+    };
+    print_address_sub();
+  
+  if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+  {
+    er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
+    er.message = "Invalid address";
+    return false;
+  }
+
+  // get the current block height
+  current_block_height = m_wallet->get_blockchain_current_height();
+ 
+  // create the data
+  data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_RENEWAL_END|" + req.tx_hash + "|" + public_address + "|";
+  
+  // sign the data    
+  data3 = m_wallet->sign(data2);
+
+  data2 += data3 + "|";
+
+  // send the data to all block verifiers
+  for (count = 0, count2 = 0, count3 = 0; count < total_delegates; count++)
+  {
+    if (send_and_receive_data(block_verifiers_IP_address[count],data2,SEND_OR_RECEIVE_SOCKET_DATA_TIMEOUT_SETTINGS*2) == "Renewed the name")
+    {
+      count2++;
+      if (block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_1 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_2 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_3 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_4 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_5)
+      {
+        count3++;
+      }
+    }     
+  }
+
+  // check the result of the data (allow for data to be valid if a majority of seed nodes accepted the data during registration mode, as this is when only the seed nodes will check the majority every block time)
+  if ((count2 >= total_delegates_valid_amount) || (current_block_height < HF_BLOCK_HEIGHT_PROOF_OF_STAKE && count3 >= (NETWORK_DATA_NODES_AMOUNT-1)))
+  {
+    res.status = "success";
+    return true;            
+  } 
+  else
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to renew the name";
+    return false; 
+  } 
+  }
+  catch (...)
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to renew the name";
+    return false;
+  }
+  return true;
+}
+
 
 }
 

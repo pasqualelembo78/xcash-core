@@ -153,6 +153,9 @@ namespace tools
         MAP_JON_RPC_WE("update_remote_data",               on_update_remote_data,               wallet_rpc::COMMAND_RPC_UPDATE_REMOTE_DATA)
         MAP_JON_RPC_WE("remote_data_save_name",               on_remote_data_save_name,               wallet_rpc::COMMAND_RPC_REMOTE_DATA_SAVE_NAME)
         MAP_JON_RPC_WE("remote_data_purchase_name",               on_remote_data_purchase_name,               wallet_rpc::COMMAND_RPC_REMOTE_DATA_PURCHASE_NAME)
+        MAP_JON_RPC_WE("remote_data_delegates_set_amount",               on_remote_data_delegates_set_amount,               wallet_rpc::COMMAND_RPC_REMOTE_DATA_DELEGATES_SET_AMOUNT)
+        MAP_JON_RPC_WE("remote_data_renewal_start",               on_remote_data_renewal_start,               wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_START)
+        MAP_JON_RPC_WE("remote_data_renewal_end",               on_remote_data_renewal_end,               wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_END)
       END_JSON_RPC_MAP()
     END_URI_MAP2()
 
@@ -239,6 +242,9 @@ namespace tools
       bool on_update_remote_data(const wallet_rpc::COMMAND_RPC_UPDATE_REMOTE_DATA::request& req, wallet_rpc::COMMAND_RPC_UPDATE_REMOTE_DATA::response& res, epee::json_rpc::error& er);
       bool on_remote_data_save_name(const wallet_rpc::COMMAND_RPC_REMOTE_DATA_SAVE_NAME::request& req, wallet_rpc::COMMAND_RPC_REMOTE_DATA_SAVE_NAME::response& res, epee::json_rpc::error& er);
       bool on_remote_data_purchase_name(const wallet_rpc::COMMAND_RPC_REMOTE_DATA_PURCHASE_NAME::request& req, wallet_rpc::COMMAND_RPC_REMOTE_DATA_PURCHASE_NAME::response& res, epee::json_rpc::error& er);
+      bool on_remote_data_delegates_set_amount(const wallet_rpc::COMMAND_RPC_REMOTE_DATA_DELEGATES_SET_AMOUNT::request& req, wallet_rpc::COMMAND_RPC_REMOTE_DATA_DELEGATES_SET_AMOUNT::response& res, epee::json_rpc::error& er);
+      bool on_remote_data_renewal_start(const wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_START::request& req, wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_START::response& res, epee::json_rpc::error& er);
+      bool on_remote_data_renewal_end(const wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_END::request& req, wallet_rpc::COMMAND_RPC_REMOTE_DATA_RENEWAL_END::response& res, epee::json_rpc::error& er);
 
       //json rpc v2
       bool on_query_key(const wallet_rpc::COMMAND_RPC_QUERY_KEY::request& req, wallet_rpc::COMMAND_RPC_QUERY_KEY::response& res, epee::json_rpc::error& er);
