@@ -240,5 +240,14 @@ std::string remote_data_display_remote_data(std::string name)
     return "The name is not registered"; 
   }
 
-  return string;
+  // process the data to a readable format
+  data = "";
+  while ((count = string.find("|")) != std::string::npos)
+  {
+    data += string.substr(0, count);
+    data += "\r\n";
+    string.erase(0, count + 1);
+  }
+
+  return data;
 }
