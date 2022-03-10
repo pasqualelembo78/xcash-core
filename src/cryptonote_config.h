@@ -191,11 +191,11 @@
 
 
 // Seed Nodes
-#define SEED_NODE_1 "dpops-test-1.xcash.foundation:18280"
-#define SEED_NODE_2 "dpops-test-2.xcash.foundation:18280"
-#define SEED_NODE_3 "dpops-test-3.xcash.foundation:18280"
-#define SEED_NODE_4 "dpops-test-4.xcash.foundation:18280"
-#define SEED_NODE_5 "dpops-test-5.xcash.foundation:18280"
+#define SEED_NODE_1 "dpops-test-internal-1.xcash.foundation:18280"
+#define SEED_NODE_2 "dpops-test-internal-2.xcash.foundation:18280"
+#define SEED_NODE_3 "dpops-test-internal-3.xcash.foundation:18280"
+#define SEED_NODE_4 "dpops-test-internal-4.xcash.foundation:18280"
+#define SEED_NODE_5 "dpops-test-internal-5.xcash.foundation:18280"
 
 /*#define SEED_NODE_1 "192.168.1.201:18280"
 #define SEED_NODE_2 "192.168.1.202:18280"
@@ -217,7 +217,7 @@ full_addrs.insert(SEED_NODE_5);
 
 // Blockchain
 #define HF_VERSION_PROOF_OF_STAKE 14
-#define HF_BLOCK_HEIGHT_PROOF_OF_STAKE 880000 // The first block of the X-CASH proof of stake
+#define HF_BLOCK_HEIGHT_PROOF_OF_STAKE 900000 // The first block of the X-CASH proof of stake
 #define BLOCK_TIME 5 // the block time in minutes
 #define BLOCKS_PER_DAY_FIVE_MINUTE_BLOCK_TIME 288 // The blocks per day with a 5 minute block time
 #define MAXIMUM_RESERVE_BYTES_LEGNTH 4096 // The maximum size in bytes for the reserve bytes in the block header
@@ -248,13 +248,13 @@ full_addrs.insert(SEED_NODE_5);
 
 // XCASH DPOPS
 #define BLOCK_VERIFIERS_TOTAL_AMOUNT 100 // The total amount of block verifiers
-#define BLOCK_VERIFIERS_AMOUNT 30 // The amount of block verifiers in a round
-#define BLOCK_VERIFIERS_VALID_AMOUNT 17 // The amount of block verifiers that need to vote true for the part of the round to be valid.
+#define BLOCK_VERIFIERS_AMOUNT 10 // The amount of block verifiers in a round
+#define BLOCK_VERIFIERS_VALID_AMOUNT 7 // The amount of block verifiers that need to vote true for the part of the round to be valid.
 #define BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE 0.55 // The amount of block verifiers in a percentage that need to vote true for the part of the round to be valid.
 
 
 // Updates data
-#define BLOCK_HEIGHT_SF_V_2_1_0 895300 // stealth address verification
+#define BLOCK_HEIGHT_SF_V_2_1_0 8000000 // stealth address verification
 
 
 // Network data nodes
@@ -265,11 +265,11 @@ full_addrs.insert(SEED_NODE_5);
 #define NETWORK_DATA_NODE_PUBLIC_ADDRESS_3 "XCA1sLyHMW23w238zJdZJVWVfMZMYyMxW9ypPVSLyduk7Ee4UtCbXMG7yJzqaT7vP24jq4ceC5F8PFTjPZEYTrKb6DdfbaLTAa"
 #define NETWORK_DATA_NODE_PUBLIC_ADDRESS_4 "XCA1dYZmCGMFnmYppTHtWoQNB168NAjHmiU9WdWsB4mXiytoHiMyrYqYYBcHwewiLhYj6eij4r8BRSScNYphZRtz8RajVriGZC"
 #define NETWORK_DATA_NODE_PUBLIC_ADDRESS_5 "XCA1rgiYYcY1k37GBiWz5PiUbB7SzvVGqPiLoBCyHdmAN8hfs47N7ZzFWZrJsTy8Lj4QKh1fFLdr2SNVebqimW7j24J9dsWBhM"
-#define NETWORK_DATA_NODE_IP_ADDRESS_1 "dpops-test-1.xcash.foundation"
-#define NETWORK_DATA_NODE_IP_ADDRESS_2 "dpops-test-2.xcash.foundation"
-#define NETWORK_DATA_NODE_IP_ADDRESS_3 "dpops-test-3.xcash.foundation"
-#define NETWORK_DATA_NODE_IP_ADDRESS_4 "dpops-test-4.xcash.foundation"
-#define NETWORK_DATA_NODE_IP_ADDRESS_5 "dpops-test-5.xcash.foundation"
+#define NETWORK_DATA_NODE_IP_ADDRESS_1 "dpops-test-internal-1.xcash.foundation"
+#define NETWORK_DATA_NODE_IP_ADDRESS_2 "dpops-test-internal-2.xcash.foundation"
+#define NETWORK_DATA_NODE_IP_ADDRESS_3 "dpops-test-internal-3.xcash.foundation"
+#define NETWORK_DATA_NODE_IP_ADDRESS_4 "dpops-test-internal-4.xcash.foundation"
+#define NETWORK_DATA_NODE_IP_ADDRESS_5 "dpops-test-internal-5.xcash.foundation"
 
 /*#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_1 "XCA1pEWxj2q7gn7TJjae7JfsDhtnhydxsHhtADhDm4LbdE11rHVZqbX5MPGZ9tM7jQbDF4VKK89jSAqgL9Nxxjdh8RM5JEpZZP"
 #define NETWORK_DATA_NODE_PUBLIC_ADDRESS_2 "XCA1VSDHKCc4Qhvqb3fquebSYxfMeyGteQeAYtDSpaTcgquBY1bkKWtQ42tZG2w7Ak7GyqnaiTgWL4bMHE9Lwd2A3g2Recxz7B"
@@ -321,7 +321,7 @@ namespace config
   uint16_t const RPC_DEFAULT_PORT = 18281;
   uint16_t const ZMQ_RPC_DEFAULT_PORT = 18282;
   boost::uuids::uuid const NETWORK_ID = { {
-      0x10 ,0x11, 0x41, 0x52 , 0x48, 0x62 , 0x25, 0x65, 0x17, 0x31, 0x00, 0x82, 0x35, 0xA1, 0xA1, 0x10
+      0x10 ,0x11, 0x41, 0x52 , 0x48, 0x62 , 0x26, 0x63, 0x19, 0x31, 0x00, 0x82, 0x35, 0xA1, 0xA1, 0x10
     } };
   std::string const GENESIS_TX = "013c01ff0001b197bcc5c605029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101f1dde8d8d6c53e9d2e920d6e66432eaff6a85b2d25043fc29ef477b075b143df";
   uint32_t const GENESIS_NONCE = 10000;
