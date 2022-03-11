@@ -4083,6 +4083,12 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
   // send the message to a random network data node
   for (count = 0; string.find("|") == std::string::npos && count < NETWORK_DATA_NODES_AMOUNT; count++)
   {
+    // check if they need to reset the network_data_nodes_array
+    if (network_data_nodes_array[NETWORK_DATA_NODES_AMOUNT-1] != 0)
+    {
+      std::fill(network_data_nodes_array, network_data_nodes_array+NETWORK_DATA_NODES_AMOUNT, 0);
+    }
+
     do
     {
       // get a random network data node

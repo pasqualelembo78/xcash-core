@@ -755,93 +755,7 @@ namespace cryptonote
     //TODO: make sure that tx has reached other nodes here, probably wait to receive reflections from other nodes
     res.status = CORE_RPC_STATUS_OK;
     return true;
-  }
-  //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_start_mining(const COMMAND_RPC_START_MINING::request& req, COMMAND_RPC_START_MINING::response& res)
-  {
-    PERF_TIMER(on_start_mining);
-    CHECK_CORE_READY();
-    cryptonote::address_parse_info info;
-    if(!get_account_address_from_str(info, m_nettype, req.miner_address))
-    {
-      res.status = "Failed, wrong address";
-      LOG_PRINT_L0(res.status);
-      return true;
-    }
-    if (info.is_subaddress)
-    {
-      res.status = "Mining to subaddress isn't supported yet";
-      LOG_PRINT_L0(res.status);
-      return true;
-    }
-
-    unsigned int concurrency_count = boost::thread::hardware_concurrency() * 4;
-
-    // if we couldn't detect threads, set it to a ridiculously high number
-    if(concurrency_count == 0)
-    {
-      concurrency_count = 257;
-    }
-
-    // if there are more threads requested than the hardware supports
-    // then we fail and log that.
-    if(req.threads_count > concurrency_count)
-    {
-      res.status = "Failed, too many threads relative to CPU cores.";
-      LOG_PRINT_L0(res.status);
-      return true;
-    }
-
-    boost::thread::attributes attrs;
-    attrs.set_stack_size(THREAD_STACK_SIZE);
-
-    cryptonote::miner &miner= m_core.get_miner();
-    if (miner.is_mining())
-    {
-      res.status = "Already mining";
-      return true;
-    }
-    if(!miner.start(info.address, static_cast<size_t>(req.threads_count), attrs, req.do_background_mining, req.ignore_battery))
-    {
-      res.status = "Failed, mining not started";
-      LOG_PRINT_L0(res.status);
-      return true;
-    }
-    res.status = CORE_RPC_STATUS_OK;
-    return true;
-  }
-  //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_stop_mining(const COMMAND_RPC_STOP_MINING::request& req, COMMAND_RPC_STOP_MINING::response& res)
-  {
-    PERF_TIMER(on_stop_mining);
-    if(!m_core.get_miner().stop())
-    {
-      res.status = "Failed, mining not stopped";
-      LOG_PRINT_L0(res.status);
-      return true;
-    }
-    res.status = CORE_RPC_STATUS_OK;
-    return true;
-  }
-  //------------------------------------------------------------------------------------------------------------------------------
-  bool core_rpc_server::on_mining_status(const COMMAND_RPC_MINING_STATUS::request& req, COMMAND_RPC_MINING_STATUS::response& res)
-  {
-    PERF_TIMER(on_mining_status);
-
-    const miner& lMiner = m_core.get_miner();
-    res.active = lMiner.is_mining();
-    res.is_background_mining_enabled = lMiner.get_is_background_mining_enabled();
-    
-    if ( lMiner.is_mining() ) {
-      res.speed = lMiner.get_speed();
-      res.threads_count = lMiner.get_threads_count();
-      const account_public_address& lMiningAdr = lMiner.get_mining_address();
-      res.address = get_account_address_as_str(m_nettype, false, lMiningAdr);
-    }
-
-    res.status = CORE_RPC_STATUS_OK;
-    return true;
-  }
+  }  
   //------------------------------------------------------------------------------------------------------------------------------
   bool core_rpc_server::on_save_bc(const COMMAND_RPC_SAVE_BC::request& req, COMMAND_RPC_SAVE_BC::response& res)
   {
@@ -888,15 +802,7 @@ namespace cryptonote
   bool core_rpc_server::on_set_log_hash_rate(const COMMAND_RPC_SET_LOG_HASH_RATE::request& req, COMMAND_RPC_SET_LOG_HASH_RATE::response& res)
   {
     PERF_TIMER(on_set_log_hash_rate);
-    if(m_core.get_miner().is_mining())
-    {
-      m_core.get_miner().do_print_hashrate(req.visible);
-      res.status = CORE_RPC_STATUS_OK;
-    }
-    else
-    {
-      res.status = CORE_RPC_STATUS_NOT_MINING;
-    }
+    res.status = CORE_RPC_STATUS_NOT_MINING;
     return true;
   }
   //------------------------------------------------------------------------------------------------------------------------------
@@ -1228,7 +1134,6 @@ namespace cryptonote
         error_resp.message = "Wrong block blob";
         return false;
       }
-      miner::find_nonce_for_given_block(b, template_res.difficulty, template_res.height);
 
       submit_req.front() = string_tools::buff_to_hex_nodelimer(block_to_blob(b));
       r = on_submitblock(submit_req, submit_res, error_resp);

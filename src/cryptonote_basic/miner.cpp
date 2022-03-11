@@ -1067,3 +1067,4 @@ namespace cryptonote
     return boost::logic::tribool(boost::logic::indeterminate);
   }
 }
+

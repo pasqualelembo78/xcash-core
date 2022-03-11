@@ -191,11 +191,11 @@
 
 
 // Seed Nodes
-#define SEED_NODE_1 "us1.xcash.foundation:18280"
-#define SEED_NODE_2 "europe1.xcash.foundation:18280"
-#define SEED_NODE_3 "europe2.xcash.foundation:18280"
-#define SEED_NODE_4 "europe3.xcash.foundation:18280"
-#define SEED_NODE_5 "oceania1.xcash.foundation:18280"
+#define SEED_NODE_1 "dpops-test-1.xcash.foundation:18280"
+#define SEED_NODE_2 "dpops-test-2.xcash.foundation:18280"
+#define SEED_NODE_3 "dpops-test-3.xcash.foundation:18280"
+#define SEED_NODE_4 "dpops-test-4.xcash.foundation:18280"
+#define SEED_NODE_5 "dpops-test-5.xcash.foundation:18280"
 
 /*#define SEED_NODE_1 "192.168.1.201:18280"
 #define SEED_NODE_2 "192.168.1.202:18280"
@@ -216,8 +216,8 @@ full_addrs.insert(SEED_NODE_5);
 // XCASH DPOPS
 
 // Blockchain
-#define HF_VERSION_PROOF_OF_STAKE 13
-#define HF_BLOCK_HEIGHT_PROOF_OF_STAKE 800000 // The first block of the X-CASH proof of stake
+#define HF_VERSION_PROOF_OF_STAKE 14
+#define HF_BLOCK_HEIGHT_PROOF_OF_STAKE 880000 // The first block of the X-CASH proof of stake
 #define BLOCK_TIME 5 // the block time in minutes
 #define BLOCKS_PER_DAY_FIVE_MINUTE_BLOCK_TIME 288 // The blocks per day with a 5 minute block time
 #define MAXIMUM_RESERVE_BYTES_LEGNTH 4096 // The maximum size in bytes for the reserve bytes in the block header
@@ -248,28 +248,28 @@ full_addrs.insert(SEED_NODE_5);
 
 // XCASH DPOPS
 #define BLOCK_VERIFIERS_TOTAL_AMOUNT 100 // The total amount of block verifiers
-#define BLOCK_VERIFIERS_AMOUNT 50 // The amount of block verifiers in a round
-#define BLOCK_VERIFIERS_VALID_AMOUNT 27 // The amount of block verifiers that need to vote true for the part of the round to be valid.
+#define BLOCK_VERIFIERS_AMOUNT 30 // The amount of block verifiers in a round
+#define BLOCK_VERIFIERS_VALID_AMOUNT 17 // The amount of block verifiers that need to vote true for the part of the round to be valid.
 #define BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE 0.55 // The amount of block verifiers in a percentage that need to vote true for the part of the round to be valid.
 
 
 // Updates data
-#define BLOCK_HEIGHT_SF_V_2_1_0 8000000 // stealth address verification
+#define BLOCK_HEIGHT_SF_V_2_1_0 895300 // stealth address verification
 
 
 // Network data nodes
 #define NETWORK_DATA_NODES_AMOUNT 5 // The amount of network data nodes
 
-#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_1 "XCA1a9usG2UKajV1Dqzp8fL1BbN3hzuaaJMYjCo7qDoC4C3Vvc5owiLAqKbVw2cRbwRqx3mgrau1Z7LkX6cxR2NC4ZmFBLe2Mf"
-#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_2 "XCA1YhckQgqGQvMsS2xi4n3cHBPo39WYFC1AXskqaFB87Q6EX5LheKK6E3ZqQmD9CDFX8br8Mfvff7RqT6UcuUja46qKC1vEJb"
-#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_3 "XCA1c2ahjRvBsp35ynTknNYczj9y42hN9ht1vNyns2FCTU4qbLqahtsTw2E7JTKLd3ecSGLe2zWJgCiwrMhecsbT38i3Smy9vW"
-#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_4 "XCA1jN7CNCKEN1kDuqxiuUPyKWiVp68RsYxshdohaQ1k8NN11ZWX9dSJv3hx6qxfPaKVAnet4LTda9fsK81c9wRN5Aj78KyZEg"
-#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_5 "XCA1hKDayQXECEA5Yja4a8CU6Suoo9XT9jET7Ng2Rx2z3fLsGy5iVQCL9hWWTi3TroJxihWY4j84n9WMJvpFvagW5hMNpq1jh9"
-#define NETWORK_DATA_NODE_IP_ADDRESS_1 "us1.xcash.foundation"
-#define NETWORK_DATA_NODE_IP_ADDRESS_2 "europe1.xcash.foundation"
-#define NETWORK_DATA_NODE_IP_ADDRESS_3 "europe2.xcash.foundation"
-#define NETWORK_DATA_NODE_IP_ADDRESS_4 "europe3.xcash.foundation"
-#define NETWORK_DATA_NODE_IP_ADDRESS_5 "oceania1.xcash.foundation"
+#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_1 "XCA1Sk2CRVQ9EoKzkv2mnzfAwgA4zvj2HfXJrzYYCtJAdLXDPuSr1UGEJPKSTGCan9fmNpqTGefkMGZ4JX3zUf357vm5VMzMir"
+#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_2 "XCA1tDjMy6UCGfC5tCpRF6U7NZNFWrSdMbF9FrE4HdoXHGRSr3NJgHdicsdV6c6tsvRU2NmGYsAGf19VNWVhkrL73XH3AKx9Dw"
+#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_3 "XCA1sLyHMW23w238zJdZJVWVfMZMYyMxW9ypPVSLyduk7Ee4UtCbXMG7yJzqaT7vP24jq4ceC5F8PFTjPZEYTrKb6DdfbaLTAa"
+#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_4 "XCA1dYZmCGMFnmYppTHtWoQNB168NAjHmiU9WdWsB4mXiytoHiMyrYqYYBcHwewiLhYj6eij4r8BRSScNYphZRtz8RajVriGZC"
+#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_5 "XCA1rgiYYcY1k37GBiWz5PiUbB7SzvVGqPiLoBCyHdmAN8hfs47N7ZzFWZrJsTy8Lj4QKh1fFLdr2SNVebqimW7j24J9dsWBhM"
+#define NETWORK_DATA_NODE_IP_ADDRESS_1 "dpops-test-1.xcash.foundation"
+#define NETWORK_DATA_NODE_IP_ADDRESS_2 "dpops-test-2.xcash.foundation"
+#define NETWORK_DATA_NODE_IP_ADDRESS_3 "dpops-test-3.xcash.foundation"
+#define NETWORK_DATA_NODE_IP_ADDRESS_4 "dpops-test-4.xcash.foundation"
+#define NETWORK_DATA_NODE_IP_ADDRESS_5 "dpops-test-5.xcash.foundation"
 
 /*#define NETWORK_DATA_NODE_PUBLIC_ADDRESS_1 "XCA1pEWxj2q7gn7TJjae7JfsDhtnhydxsHhtADhDm4LbdE11rHVZqbX5MPGZ9tM7jQbDF4VKK89jSAqgL9Nxxjdh8RM5JEpZZP"
 #define NETWORK_DATA_NODE_PUBLIC_ADDRESS_2 "XCA1VSDHKCc4Qhvqb3fquebSYxfMeyGteQeAYtDSpaTcgquBY1bkKWtQ42tZG2w7Ak7GyqnaiTgWL4bMHE9Lwd2A3g2Recxz7B"
@@ -321,7 +321,7 @@ namespace config
   uint16_t const RPC_DEFAULT_PORT = 18281;
   uint16_t const ZMQ_RPC_DEFAULT_PORT = 18282;
   boost::uuids::uuid const NETWORK_ID = { {
-      0x10 ,0x10, 0x41, 0x53 , 0x48, 0x62 , 0x41, 0x65, 0x17, 0x31, 0x00, 0x82, 0x16, 0xA1, 0xA1, 0x10
+      0x10 ,0x11, 0x41, 0x52 , 0x48, 0x62 , 0x25, 0x65, 0x17, 0x31, 0x00, 0x82, 0x35, 0xA1, 0xA1, 0x10
     } };
   std::string const GENESIS_TX = "013c01ff0001b197bcc5c605029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101f1dde8d8d6c53e9d2e920d6e66432eaff6a85b2d25043fc29ef477b075b143df";
   uint32_t const GENESIS_NONCE = 10000;

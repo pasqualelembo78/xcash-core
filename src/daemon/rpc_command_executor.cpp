@@ -424,11 +424,6 @@ bool t_rpc_command_executor::show_status() {
       tools::fail_msg_writer() << make_error(fail_message, hfres.status);
       return true;
     }
-    if (!m_rpc_server->on_mining_status(mreq, mres))
-    {
-      tools::fail_msg_writer() << fail_message.c_str();
-      return true;
-    }
 
     if (mres.status == CORE_RPC_STATUS_BUSY)
     {
@@ -1068,61 +1063,6 @@ bool t_rpc_command_executor::print_transaction_pool_stats() {
   }
   tools::msg_writer();
 
-  return true;
-}
-
-bool t_rpc_command_executor::start_mining(cryptonote::account_public_address address, uint64_t num_threads, cryptonote::network_type nettype, bool do_background_mining, bool ignore_battery) {
-  cryptonote::COMMAND_RPC_START_MINING::request req;
-  cryptonote::COMMAND_RPC_START_MINING::response res;
-  req.miner_address = cryptonote::get_account_address_as_str(nettype, false, address);
-  req.threads_count = num_threads;
-  req.do_background_mining = do_background_mining;
-  req.ignore_battery = ignore_battery;
-  
-  std::string fail_message = "Mining did not start";
-
-  if (m_is_rpc)
-  {
-    if (m_rpc_client->rpc_request(req, res, "/start_mining", fail_message.c_str()))
-    {
-      tools::success_msg_writer() << "Mining started";
-    }
-  }
-  else
-  {
-    if (!m_rpc_server->on_start_mining(req, res) || res.status != CORE_RPC_STATUS_OK)
-    {
-      tools::fail_msg_writer() << make_error(fail_message, res.status);
-      return true;
-    }
-  }
-
-  return true;
-}
-
-bool t_rpc_command_executor::stop_mining() {
-  cryptonote::COMMAND_RPC_STOP_MINING::request req;
-  cryptonote::COMMAND_RPC_STOP_MINING::response res;
-
-  std::string fail_message = "Mining did not stop";
-
-  if (m_is_rpc)
-  {
-    if (!m_rpc_client->rpc_request(req, res, "/stop_mining", fail_message.c_str()))
-    {
-      return true;
-    }
-  }
-  else
-  {
-    if (!m_rpc_server->on_stop_mining(req, res) || res.status != CORE_RPC_STATUS_OK)
-    {
-      tools::fail_msg_writer() << make_error(fail_message, res.status);
-      return true;
-    }
-  }
-
-  tools::success_msg_writer() << "Mining stopped";
   return true;
 }
 

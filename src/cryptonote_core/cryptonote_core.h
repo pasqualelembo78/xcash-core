@@ -219,19 +219,7 @@ namespace cryptonote
      virtual void on_transaction_relayed(const cryptonote::blobdata& tx);
 
 
-     /**
-      * @brief gets the miner instance
-      *
-      * @return a reference to the miner instance
-      */
-     miner& get_miner(){return m_miner;}
-
-     /**
-      * @brief gets the miner instance (const)
-      *
-      * @return a const reference to the miner instance
-      */
-     const miner& get_miner()const{return m_miner;}
+ 
 
      /**
       * @brief adds command line options to the given options set

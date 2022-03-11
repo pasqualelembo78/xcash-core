@@ -2363,6 +2363,12 @@ std::string get_current_block_verifiers_list()
   // send the message to a random network data node
   for (count = 0; string.find("|") == std::string::npos && count < NETWORK_DATA_NODES_AMOUNT; count++)
   {
+    // check if they need to reset the network_data_nodes_array
+    if (network_data_nodes_array[NETWORK_DATA_NODES_AMOUNT-1] != 0)
+    {
+      std::fill(network_data_nodes_array, network_data_nodes_array+NETWORK_DATA_NODES_AMOUNT, 0);
+    }
+
     do
     {
       // get a random network data node
@@ -2878,6 +2884,12 @@ std::string WalletImpl::vote_status() {
   // send the message to a random network data node
   for (count = 0; string.find("delegate_name: ") == std::string::npos && count < NETWORK_DATA_NODES_AMOUNT; count++)
   {
+    // check if they need to reset the network_data_nodes_array
+    if (network_data_nodes_array[NETWORK_DATA_NODES_AMOUNT-1] != 0)
+    {
+      std::fill(network_data_nodes_array, network_data_nodes_array+NETWORK_DATA_NODES_AMOUNT, 0);
+    }
+
     do
     {
       // get a random network data node
@@ -2971,6 +2983,12 @@ std::string WalletImpl::revote() {
   // send the message to a random network data node
   for (count = 0; string.find("delegate_name: ") == std::string::npos && count < NETWORK_DATA_NODES_AMOUNT; count++)
   {
+    // check if they need to reset the network_data_nodes_array
+    if (network_data_nodes_array[NETWORK_DATA_NODES_AMOUNT-1] != 0)
+    {
+      std::fill(network_data_nodes_array, network_data_nodes_array+NETWORK_DATA_NODES_AMOUNT, 0);
+    }
+
     do
     {
       // get a random network data node
