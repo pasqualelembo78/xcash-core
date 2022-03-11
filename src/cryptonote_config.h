@@ -254,7 +254,7 @@ full_addrs.insert(SEED_NODE_5);
 
 
 // Updates data
-#define BLOCK_HEIGHT_SF_V_2_2_0 914000 // stealth address verification Tuesday, April 5, 2022 22:30:00 UTC
+#define BLOCK_HEIGHT_SF_V_2_2_0 910000 // stealth address verification Tuesday, March 23, 2022 03:00:00 UTC
 
 
 // Network data nodes
