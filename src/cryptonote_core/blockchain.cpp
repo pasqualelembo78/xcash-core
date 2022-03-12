@@ -3988,7 +3988,7 @@ bool verify_network_block(std::vector<std::string> &block_verifiers_database_has
   #define VERIFY_DATA_HASH(total,data,data2,counter) \
   for (count = 0, counter = 0; count < total; count++) \
   { \
-    if ((current_block_height < BLOCK_HEIGHT_SF_V_2_1_0 && data[count].length() >= DATA_HASH_LENGTH && data[count] != "" && data_hash == data[count].substr(0,DATA_HASH_LENGTH)) || (current_block_height >= BLOCK_HEIGHT_SF_V_2_1_0 && data[count].length() >= DATA_HASH_LENGTH && data[count] != "" && data_hash == data[count].substr(0,DATA_HASH_LENGTH) && stealth_address == data2[count].substr(0,STEALTH_ADDRESS_OUTPUT_LENGTH))) \
+    if ((current_block_height < BLOCK_HEIGHT_SF_V_2_2_0 && data[count].length() >= DATA_HASH_LENGTH && data[count] != "" && data_hash == data[count].substr(0,DATA_HASH_LENGTH)) || (current_block_height >= BLOCK_HEIGHT_SF_V_2_2_0 && data[count].length() >= DATA_HASH_LENGTH && data[count] != "" && data_hash == data[count].substr(0,DATA_HASH_LENGTH) && stealth_address == data2[count].substr(0,STEALTH_ADDRESS_OUTPUT_LENGTH))) \
     { \
       counter++; \
     } \
@@ -4173,7 +4173,7 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
     }
     else
     {
-      if (current_block_height >= BLOCK_HEIGHT_SF_V_2_1_0)
+      if (current_block_height >= BLOCK_HEIGHT_SF_V_2_2_0)
       {
         // separate the data hash and the stealth address
         if ((blocks_amount = ((std::count(string.begin(), string.end(), '|') / 2) * DATA_HASH_LENGTH) + (std::count(string.begin(), string.end(), '|') / 2)) >= string.length())
@@ -4254,7 +4254,7 @@ bool check_block_verifier_node_signed_block(const block bl, const std::size_t cu
   return false;
 
   // reset the data if the current block is the HF block for the new verification format, this way it will correctly sync from a range of in between old and new formats
-  if (current_block_height == BLOCK_HEIGHT_SF_V_2_1_0)
+  if (current_block_height == BLOCK_HEIGHT_SF_V_2_2_0)
   {
     for (count = 0; count < BLOCK_VERIFIERS_TOTAL_AMOUNT; count++)
     {
