@@ -259,7 +259,7 @@ full_addrs.insert(SEED_NODE_5);
 #define BLOCK_HEIGHT_SF_V_2_2_0 900100 // stealth address verification
 
 // Remote Data
-#define HF_BLOCK_HEIGHT_REMOTE_DATA 8000000 // The first block of the remote data
+#define HF_BLOCK_HEIGHT_REMOTE_DATA 900885 // The first block of the remote data
 
 
 // Network data nodes
