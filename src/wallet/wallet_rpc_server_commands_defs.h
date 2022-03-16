@@ -2170,27 +2170,6 @@ namespace wallet_rpc
     };
   };
 
-  struct COMMAND_RPC_DISPLAY_REMOTE_DATA
-  {
-    struct request
-    {
-      std::string name;
-
-      BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(name)
-      END_KV_SERIALIZE_MAP()
-    };
-
-    struct response
-    {
-      std::string status;
-
-      BEGIN_KV_SERIALIZE_MAP()
-        KV_SERIALIZE(status)
-      END_KV_SERIALIZE_MAP()
-    };
-  };
-
   struct COMMAND_RPC_UPDATE_REMOTE_DATA
   {
     struct request

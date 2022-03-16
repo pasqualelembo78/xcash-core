@@ -228,7 +228,6 @@ namespace cryptonote
     bool delegate_recover(const std::vector<std::string>& args);
     bool vote_status(const std::vector<std::string>& args);
     bool revote(const std::vector<std::string>& args);
-    bool display_remote_data(const std::vector<std::string>& args);
     bool update_remote_data(const std::vector<std::string>& args); 
     bool remote_data_save_name(const std::vector<std::string>& args);
     bool remote_data_purchase_name(const std::vector<std::string>& args);  

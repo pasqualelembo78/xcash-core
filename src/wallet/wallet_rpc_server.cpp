@@ -4283,53 +4283,6 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
   return true;
 }
 
-bool wallet_rpc_server::on_display_remote_data(const wallet_rpc::COMMAND_RPC_DISPLAY_REMOTE_DATA::request& req, wallet_rpc::COMMAND_RPC_DISPLAY_REMOTE_DATA::response& res, epee::json_rpc::error& er)
-{
-  // Variables
-  std::string string = "";
-
-  try
-  {
-  // check if the wallet is open
-  if (!m_wallet) return not_open(er);
-
-  // error check
-  if (m_wallet->key_on_device())
-  {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to send the vote";
-    return false;
-  }
-  if (m_wallet->watch_only() || m_wallet->multisig())
-  {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to send the vote";
-    return false;
-  }
-
-  string = remote_data_display_remote_data(req.name);
-
-  if (string.find("address:") == std::string::npos)
-  {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to display the remote data";
-    return false; 
-  }
-  else
-  {
-    res.status = string;
-    return true;
-  }
-  }
-  catch (...)
-  {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to check the vote status";
-    return false; 
-  }
-  return true;
-}
-
 bool wallet_rpc_server::on_update_remote_data(const wallet_rpc::COMMAND_RPC_UPDATE_REMOTE_DATA::request& req, wallet_rpc::COMMAND_RPC_UPDATE_REMOTE_DATA::response& res, epee::json_rpc::error& er)
 {
   // Variables

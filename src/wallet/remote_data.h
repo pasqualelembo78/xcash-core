@@ -35,4 +35,3 @@ void remote_data_sync_minutes_and_seconds(const int settings, const bool display
 std::string get_remote_data_address_settings(std::string public_address);
 bool process_remote_data_transactions(const uint64_t height, const std::string remote_data_address_settings,const cryptonote::transaction& tx);
 std::string get_address_from_name(const std::string name);
-std::string remote_data_display_remote_data(std::string name);

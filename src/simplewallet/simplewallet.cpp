@@ -3196,51 +3196,6 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
   return true; 
 }
 
-bool simple_wallet::display_remote_data(const std::vector<std::string>& args)
-{
-  // Variables
-  std::string string = "";
-
-  // define macros
-  #define PARAMETER_AMOUNT 1
-
-  try
-  {
-  // error check
-  if (args.size() != PARAMETER_AMOUNT)
-  {
-    fail_msg_writer() << tr("Invalid parameters");
-    return true;
-  }    
-  if (m_wallet->key_on_device())
-  {
-    fail_msg_writer() << tr("Failed to send the vote\nCommand not supported by HW wallet");
-    return true;
-  }
-  if (m_wallet->watch_only() || m_wallet->multisig())
-  {
-    fail_msg_writer() << tr("Failed to send the vote\nThe reserve proof can be generated only by a full wallet");
-    return true;
-  }
-  if (!try_connect_to_daemon())
-  {
-    fail_msg_writer() << tr("Failed to send the vote\nFailed to connect to the daemon");
-    return true;
-  }
-  string = args[0];
-  string = remote_data_display_remote_data(args[0]);
-
-  string.find("address:") == std::string::npos ? fail_msg_writer() << string : message_writer(console_color_green, false) << string; 
-  }
-  catch (...)
-  {
-    fail_msg_writer() << tr("Failed to get the remote data");
-  }
-  return true;  
-
-  #undef PARAMETER_AMOUNT
-}
-
 bool simple_wallet::remote_data_delegates_set_amount(const std::vector<std::string>& args)
 {
   // Variables
@@ -6566,14 +6521,14 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
   }
 
   // check for a valid tx_privacy_settings
-  for (size_t i = 0; i < local_args.size(); )
+  for (size_t i = 0; i < local_args.size(); i++)
   {
     if (local_args[i].find(".sxcash") != std::string::npos)
-    {     
+    { 
       remote_data_saddress = true;
     }  
     if (local_args[i].find(".pxcash") != std::string::npos)
-    {     
+    {    
       remote_data_paddress = true;
     }  
   }
