@@ -865,11 +865,11 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
       std::string tx_privacy_settings = req.tx_privacy_settings != "" ? req.tx_privacy_settings : "private";
       for (auto it = req.destinations.begin(); it != req.destinations.end(); it++)
       {
-        if (it->address.find(".sxcash") == std::string::npos)
+        if (it->address.find(".sxcash") != std::string::npos)
         {     
           remote_data_saddress = true;
         }  
-        if (it->address.find(".pxcash") == std::string::npos)
+        if (it->address.find(".pxcash") != std::string::npos)
         {     
           remote_data_paddress = true;
         }  

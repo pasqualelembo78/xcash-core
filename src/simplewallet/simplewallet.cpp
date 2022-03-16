@@ -6568,11 +6568,11 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
   // check for a valid tx_privacy_settings
   for (size_t i = 0; i < local_args.size(); )
   {
-    if (local_args[i].find(".sxcash") == std::string::npos)
+    if (local_args[i].find(".sxcash") != std::string::npos)
     {     
       remote_data_saddress = true;
     }  
-    if (local_args[i].find(".pxcash") == std::string::npos)
+    if (local_args[i].find(".pxcash") != std::string::npos)
     {     
       remote_data_paddress = true;
     }  
