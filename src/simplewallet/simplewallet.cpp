@@ -4456,10 +4456,6 @@ simple_wallet::simple_wallet()
                            boost::bind(&simple_wallet::revote, this, _1),
                            tr("revote"),
                            tr("Revotes to the currently staked to delegate with the full wallet balance"));
-  m_cmd_binder.set_handler("display_remote_data",
-                           boost::bind(&simple_wallet::display_remote_data, this, _1),
-                           tr("display_remote_data <name>"),
-                           tr("Displays the remote data for a name)"));
   m_cmd_binder.set_handler("update_remote_data",
                            boost::bind(&simple_wallet::update_remote_data, this, _1),
                            tr("update_remote_data <item> <value>"),
