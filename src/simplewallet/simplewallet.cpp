@@ -5699,8 +5699,11 @@ bool simple_wallet::open_wallet(const boost::program_options::variables_map& vm)
       return false;
     }
 
-    // set the current public address for remote data
+  // set the current public address for remote data
+  if (current_public_address.length() != XCASH_WALLET_LENGTH || current_public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+  {
     current_public_address = m_wallet->get_account().get_public_address_str(m_wallet->nettype());
+  }
 
     std::string prefix;
     bool ready;

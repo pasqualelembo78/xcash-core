@@ -2848,9 +2848,6 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
 
     if (m_wallet)
     {
-      // set the current public address for remote data
-      current_public_address = m_wallet->get_account().get_public_address_str(m_wallet->nettype());
-
       try
       {
         m_wallet->store();

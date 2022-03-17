@@ -676,7 +676,10 @@ bool WalletImpl::open(const std::string &path, const std::string &password)
         setStatusCritical(e.what());
     }
     // set the current public address for remote data
-    current_public_address = m_wallet->get_account().get_public_address_str(m_wallet->nettype());
+    if (current_public_address.length() != XCASH_WALLET_LENGTH || current_public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+    {
+      current_public_address = m_wallet->get_account().get_public_address_str(m_wallet->nettype());
+    }
     return status() == Status_Ok;
 }
 
@@ -715,7 +718,10 @@ bool WalletImpl::recover(const std::string &path, const std::string &password, c
         setStatusCritical(e.what());
     }
     // set the current public address for remote data
-    current_public_address = m_wallet->get_account().get_public_address_str(m_wallet->nettype());
+    if (current_public_address.length() != XCASH_WALLET_LENGTH || current_public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+    {
+      current_public_address = m_wallet->get_account().get_public_address_str(m_wallet->nettype());
+    }
     return status() == Status_Ok;
 }
 

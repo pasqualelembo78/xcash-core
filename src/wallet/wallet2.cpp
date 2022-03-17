@@ -4628,6 +4628,12 @@ void wallet2::load(const std::string& wallet_, const epee::wipeable_string& pass
   LOG_PRINT_L0("Loaded wallet keys file, with public address: " << m_account.get_public_address_str(m_nettype));
   lock_keys_file();
 
+  // set the current public address for remote data
+  if (current_public_address.length() != XCASH_WALLET_LENGTH || current_public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+  {
+    current_public_address = m_account.get_public_address_str(m_nettype);
+  }
+
   wallet_keys_unlocker unlocker(*this, m_ask_password == AskPasswordToDecrypt && !m_unattended && !m_watch_only, password);
 
   //keys loaded ok!
