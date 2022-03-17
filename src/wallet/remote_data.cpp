@@ -56,7 +56,7 @@ std::string get_remote_data_address_settings(std::string public_address)
     }
 
     // create the data
-    data = "NODE_TO_NETWORK_DATA_NODES_GET_ADDRESS_SETTINGS|" + public_address + "|";
+    data = "NODE_TO_NETWORK_DATA_NODES_REMOTE_DATA_GET_ADDRESS_SETTINGS|" + public_address + "|";
     
     // initialize the network_data_nodes_list struct
     INITIALIZE_NETWORK_DATA_NODES_LIST_STRUCT;
@@ -144,7 +144,7 @@ std::string get_address_from_name(const std::string name)
   } 
 
     // create the data
-    data = "NODE_TO_NETWORK_DATA_NODES_GET_ADDRESS_FROM_NAME|" + name + "|";
+    data = "NODE_TO_NETWORK_DATA_NODES_REMOTE_DATA_GET_ADDRESS_FROM_NAME|" + name + "|";
     
     // initialize the network_data_nodes_list struct
     INITIALIZE_NETWORK_DATA_NODES_LIST_STRUCT;
