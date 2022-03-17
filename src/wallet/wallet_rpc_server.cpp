@@ -889,6 +889,21 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
         tx_privacy_settings = "private";
       }
 
+      // check to make sure this account is not limited in sending certain types of transactions
+      std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);
+      if (tx_privacy_settings_status == "saddress" && tx_privacy_settings == "public")
+      {
+        er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+        er.message = "This is a saddress, and can only send and receive private transactions, but you are attempting to send a public transaction";
+        return false;
+      }
+      else if (tx_privacy_settings_status == "paddress" && tx_privacy_settings == "private")
+      {
+        er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+        er.message = "This is a paddress, and can only send and receive public transactions, but you are attempting to send a private transaction";
+        return false;
+      }
+
 
       // convert the tx privacy settings to lower case
       for (int count = 0; tx_privacy_settings[count]; count++)

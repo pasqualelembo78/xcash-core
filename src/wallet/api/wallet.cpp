@@ -1337,6 +1337,17 @@ const std::string receiver_public_address = (dst_addr.find(".xcash") == std::str
 
     std::string tx_privacy_settings = privacy_settings == 0 || dst_addr.find(".pxcash") ? "public" : "private;
 
+    // check to make sure this account is not limited in sending certain types of transactions
+    std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);
+    if (tx_privacy_settings_status == "saddress" && tx_privacy_settings == "public")
+    {
+      setStatusError(tr("This is a saddress, and can only send and receive private transactions, but you are attempting to send a public transaction"));
+    }
+    else if (tx_privacy_settings_status == "paddress" && tx_privacy_settings == "private")
+    {
+      setStatusError(tr("This is a paddress, and can only send and receive public transactions, but you are attempting to send a private transaction"));
+    }
+
     clearStatus();
     // Pause refresh thread while creating transaction
     pauseRefresh();

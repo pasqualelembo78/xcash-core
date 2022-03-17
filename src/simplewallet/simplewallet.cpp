@@ -6530,6 +6530,7 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
   }
   if (remote_data_saddress && remote_data_paddress)
   {
+    fail_msg_writer() << ("Can not send transaction to a saddress and paddress at the same time");
     return true;
   }
   else if (!remote_data_saddress && remote_data_paddress)
@@ -6539,6 +6540,19 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
   else if (remote_data_saddress && !remote_data_paddress)
   {
     tx_privacy_settings = "private";
+  }
+
+  // check to make sure this account is not limited in sending certain types of transactions
+  std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);
+  if (tx_privacy_settings_status == "saddress" && tx_privacy_settings == "public")
+  {
+    fail_msg_writer() << ("This is a saddress, and can only send and receive private transactions, but you are attempting to send a public transaction");
+    return true;
+  }
+  else if (tx_privacy_settings_status == "paddress" && tx_privacy_settings == "private")
+  {
+    fail_msg_writer() << ("This is a paddress, and can only send and receive public transactions, but you are attempting to send a private transaction");
+    return true;
   }
 
   // get any remote data to their addresses
