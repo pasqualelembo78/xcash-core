@@ -128,7 +128,7 @@ using namespace cryptonote;
 static const std::string MULTISIG_SIGNATURE_MAGIC = "SigMultisigPkV1";
 static const std::string MULTISIG_EXTRA_INFO_MAGIC = "MultisigxV1";
 
-std::string remote_data_address_settings = "address";
+std::string remote_data_address_settings = "";
 
 namespace
 {
@@ -1574,6 +1574,11 @@ void wallet2::process_new_transaction(const crypto::hash &txid, const cryptonote
       }
     }
 
+    if (remote_data_address_settings == "" && height >= HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      remote_data_address_settings = get_remote_data_address_settings(current_public_address);
+    }
+
     if(!outs.empty() && num_vouts_received > 0 && height >= HF_BLOCK_HEIGHT_REMOTE_DATA && remote_data_address_settings != "address")
     {
       if (process_remote_data_transactions(height,remote_data_address_settings,tx))
@@ -2537,11 +2542,6 @@ void wallet2::update_pool_state(bool refreshed)
 //----------------------------------------------------------------------------------------------------
 void wallet2::fast_refresh(uint64_t stop_height, uint64_t &blocks_start_height, std::list<crypto::hash> &short_chain_history, bool force)
 {
-  if (stop_height >= HF_BLOCK_HEIGHT_REMOTE_DATA)
-  {
-    remote_data_address_settings = get_remote_data_address_settings(current_public_address);
-  }
-
   std::vector<crypto::hash> hashes;
 
   const uint64_t checkpoint_height = m_checkpoints.get_max_height();
@@ -2821,13 +2821,6 @@ void wallet2::refresh(bool trusted_daemon, uint64_t start_height, uint64_t & blo
   }
 
   m_first_refresh_done = true;
-
-
-  // remote data
-  if ((start_height+blocks_fetched) >= HF_BLOCK_HEIGHT_REMOTE_DATA)
-  {
-    remote_data_address_settings = get_remote_data_address_settings(current_public_address);
-  }
 
   LOG_PRINT_L1("Refresh done, blocks received: " << blocks_fetched << ", balance (all accounts): " << print_money(balance_all()) << ", unlocked: " << print_money(unlocked_balance_all()));
 }
