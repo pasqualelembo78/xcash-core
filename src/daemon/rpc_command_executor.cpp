@@ -343,14 +343,6 @@ bool t_rpc_command_executor::show_difficulty() {
   return true;
 }
 
-static std::string get_mining_speed(uint64_t hr)
-{
-  if (hr>1e9) return (boost::format("%.2f GH/s") % (hr/1e9)).str();
-  if (hr>1e6) return (boost::format("%.2f MH/s") % (hr/1e6)).str();
-  if (hr>1e3) return (boost::format("%.2f kH/s") % (hr/1e3)).str();
-  return (boost::format("%.0f H/s") % hr).str();
-}
-
 static std::string get_fork_extra_info(uint64_t t, uint64_t now, uint64_t block_time)
 {
   uint64_t blocks_per_day = 86400 / block_time;
@@ -391,12 +383,10 @@ bool t_rpc_command_executor::show_status() {
   cryptonote::COMMAND_RPC_HARD_FORK_INFO::request hfreq;
   cryptonote::COMMAND_RPC_HARD_FORK_INFO::response hfres;
   epee::json_rpc::error error_resp;
-  bool has_mining_info = true;
 
   std::string fail_message = "Problem fetching info";
 
   hfreq.version = 0;
-  bool mining_busy = false;
   if (m_is_rpc)
   {
     if (!m_rpc_client->rpc_request(ireq, ires, "/getinfo", fail_message.c_str()))

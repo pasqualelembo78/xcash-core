@@ -648,7 +648,6 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------
     bool core::deinit()
   {
-    m_miner.stop();
     m_mempool.deinit();
     m_blockchain_storage.deinit();
     return true;
@@ -962,7 +961,6 @@ namespace cryptonote
   //-----------------------------------------------------------------------------------------------
   bool core::get_stat_info(core_stat_info& st_inf) const
   {
-    st_inf.mining_speed = m_miner.get_speed();
     st_inf.alternative_blocks = m_blockchain_storage.get_alternative_blocks_count();
     st_inf.blockchain_height = m_blockchain_storage.get_current_blockchain_height();
     st_inf.tx_pool_size = m_mempool.get_transactions_count();
@@ -1522,7 +1520,6 @@ namespace cryptonote
     m_txpool_auto_relayer.do_call(boost::bind(&core::relay_txpool_transactions, this));
     m_check_updates_interval.do_call(boost::bind(&core::check_updates, this));
     m_check_disk_space_interval.do_call(boost::bind(&core::check_disk_space, this));
-    m_miner.on_idle();
     m_mempool.on_idle();
     return true;
   }
