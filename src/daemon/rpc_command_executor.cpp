@@ -390,8 +390,6 @@ bool t_rpc_command_executor::show_status() {
   cryptonote::COMMAND_RPC_GET_INFO::response ires;
   cryptonote::COMMAND_RPC_HARD_FORK_INFO::request hfreq;
   cryptonote::COMMAND_RPC_HARD_FORK_INFO::response hfres;
-  cryptonote::COMMAND_RPC_MINING_STATUS::request mreq;
-  cryptonote::COMMAND_RPC_MINING_STATUS::response mres;
   epee::json_rpc::error error_resp;
   bool has_mining_info = true;
 
@@ -409,8 +407,6 @@ bool t_rpc_command_executor::show_status() {
     {
       return true;
     }
-    // mining info is only available non unrestricted RPC mode
-    has_mining_info = m_rpc_client->rpc_request(mreq, mres, "/mining_status", fail_message.c_str());
   }
   else
   {
@@ -422,16 +418,6 @@ bool t_rpc_command_executor::show_status() {
     if (!m_rpc_server->on_hard_fork_info(hfreq, hfres, error_resp) || hfres.status != CORE_RPC_STATUS_OK)
     {
       tools::fail_msg_writer() << make_error(fail_message, hfres.status);
-      return true;
-    }
-
-    if (mres.status == CORE_RPC_STATUS_BUSY)
-    {
-      mining_busy = true;
-    }
-    else if (mres.status != CORE_RPC_STATUS_OK)
-    {
-      tools::fail_msg_writer() << make_error(fail_message, mres.status);
       return true;
     }
   }
@@ -453,14 +439,12 @@ bool t_rpc_command_executor::show_status() {
   }
 
   std::stringstream str;
-  str << boost::format("Height: %llu/%llu (%.1f%%) on %s%s, %s, net hash %s, v%u%s, %s, %u(out)+%u(in) connections")
+  str << boost::format("Height: %llu/%llu (%.1f%%) on %s%s, v%u%s, %s, %u(out)+%u(in) connections")
     % (unsigned long long)ires.height
     % (unsigned long long)net_height
     % get_sync_percentage(ires)
     % (ires.testnet ? "testnet" : ires.stagenet ? "stagenet" : "mainnet")
     % bootstrap_msg
-    % (!has_mining_info ? "mining info unavailable" : mining_busy ? "syncing" : mres.active ? ( ( mres.is_background_mining_enabled ? "smart " : "" ) + std::string("mining at ") + get_mining_speed(mres.speed) ) : "not mining")
-    % get_mining_speed(ires.difficulty / ires.target)
     % (unsigned)hfres.version
     % get_fork_extra_info(hfres.earliest_height, net_height, ires.target)
     % (hfres.state == cryptonote::HardFork::Ready ? "up to date" : hfres.state == cryptonote::HardFork::UpdateNeeded ? "update needed" : "out of date, likely forked")
