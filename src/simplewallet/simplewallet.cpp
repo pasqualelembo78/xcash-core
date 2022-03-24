@@ -7121,17 +7121,16 @@ bool simple_wallet::sweep_main(uint64_t below, bool locked, const std::vector<st
   {
     fail_msg_writer() << boost::format(tr("usage: %s [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] [outputs=<N>] <address> [<payment_id>]")) % (below ? "sweep_below" : "sweep_all");
   };
-  if (args_.size() == 0)
-  {
-    fail_msg_writer() << tr("No address given");
-    print_usage();
-    return true;
-  }
 
   if (!try_connect_to_daemon())
     return true;
 
   std::vector<std::string> local_args = args_;
+
+  if (args_.size() == 0)
+  {
+    local_args.push_back(m_wallet->get_account().get_public_address_str(m_wallet->nettype()));
+  }
 
   std::set<uint32_t> subaddr_indices;
   if (local_args.size() > 0 && local_args[0].substr(0, 6) == "index=")
