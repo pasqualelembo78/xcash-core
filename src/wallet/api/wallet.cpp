@@ -1341,7 +1341,8 @@ PendingTransaction *WalletImpl::createTransaction(const string &dst_addr, const 
 // get the address if using remote data
 const std::string receiver_public_address = (dst_addr.find(".xcash") == std::string::npos && dst_addr.find(".sxcash") == std::string::npos && dst_addr.find(".pxcash") == std::string::npos) ? dst_addr : get_address_from_name(dst_addr);
 
-    std::string tx_privacy_settings = privacy_settings == 0 || dst_addr.find(".pxcash") ? "public" : "private;
+    std::string tx_privacy_settings = privacy_settings == 0 || dst_addr.find(".pxcash") != std::string::npos ? "public" : "private";
+    tx_privacy_settings = privacy_settings == dst_addr.find(".xcash") == std::string::npos && get_remote_data_address_settings(dst_addr) == "saddress" ? "private" : dst_addr.find(".xcash") == std::string::npos && get_remote_data_address_settings(dst_addr) == "paddress" ? "public" : tx_privacy_settings;
 
     // check to make sure this account is not limited in sending certain types of transactions
     std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);

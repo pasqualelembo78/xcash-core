@@ -843,12 +843,6 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
       return false;
     }
 
-    // validate the transfer requested and populate dsts & extra
-    if (!validate_transfer(req.destinations, req.payment_id, dsts, extra, true, er))
-    {
-      return false;
-    }
-
     try
     {
       uint64_t mixin;
@@ -869,7 +863,15 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
         {     
           remote_data_saddress = true;
         }  
-        if (it->address.find(".pxcash") != std::string::npos)
+        else if (it->address.find(".pxcash") != std::string::npos)
+        {     
+          remote_data_paddress = true;
+        }  
+        else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "saddress")
+        {     
+          remote_data_saddress = true;
+        }  
+        else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "paddress")
         {     
           remote_data_paddress = true;
         }  
@@ -916,6 +918,12 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
       er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
       er.message = "Invalid tx_privacy_settings. private or public are the only valid settings";
       return false;
+      }
+
+      // validate the transfer requested and populate dsts & extra
+      if (!validate_transfer(req.destinations, req.payment_id, dsts, extra, true, er))
+      {
+        return false;
       }
 
       uint32_t priority = m_wallet->adjust_priority(req.priority);
