@@ -261,6 +261,9 @@ full_addrs.insert(SEED_NODE_5);
 // Remote Data
 #define HF_BLOCK_HEIGHT_REMOTE_DATA 900885 // The first block of the remote data
 
+// Turbo Tx
+#define HF_BLOCK_HEIGHT_TURBO_TX 900885 // The first block of the turbo tx
+
 
 // Network data nodes
 #define NETWORK_DATA_NODES_AMOUNT 5 // The amount of network data nodes
