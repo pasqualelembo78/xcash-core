@@ -3059,6 +3059,12 @@ std::string WalletImpl::update_remote_data(const  std::string &item,const  std::
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      return "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+    }
+
     // check if the item to update is a valid item
     if (item != "website" && item != "smart_contract_hash")
     {
@@ -3172,6 +3178,12 @@ std::string WalletImpl::remote_data_save_name(const std::string &name)  {
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      return "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+    }
+
     // check if the name is valid
     if (name.length() >= 100)
     {
@@ -3280,6 +3292,12 @@ std::string WalletImpl::remote_data_purchase_name(const std::string &saddress,co
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      return "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+    }
+
     // check if the item is valid
     if (saddress.length() != XCASH_WALLET_LENGTH || saddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || paddress.length() != XCASH_WALLET_LENGTH || paddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || tx_hash.length() != 64)
     {
@@ -3388,6 +3406,12 @@ std::string WalletImpl::remote_data_delegates_set_amount(const  std::string &amo
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      return "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+    }
+
     // check if the amount is valid
     if (amount.empty() || amount.find_first_not_of("0123456789") != std::string::npos)
     {
@@ -3496,6 +3520,12 @@ std::string WalletImpl::remote_data_renewal_start()  {
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      return "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+    }
+
     // wait until the next valid data time
     remote_data_sync_minutes_and_seconds(1,false);
 
@@ -3598,6 +3628,12 @@ std::string WalletImpl::remote_data_renewal_end(const std::string &tx_hash)  {
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      return "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+    }
+
     // wait until the next valid data time
     remote_data_sync_minutes_and_seconds(0,false);
 

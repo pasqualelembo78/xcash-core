@@ -3219,6 +3219,13 @@ bool simple_wallet::remote_data_delegates_set_amount(const std::vector<std::stri
 
   try
   {
+    // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      fail_msg_writer() << tr("This protocol will be implemented at block height ") << HF_BLOCK_HEIGHT_REMOTE_DATA;
+      return true;
+    }
+
     if (args.size() != PARAMETER_AMOUNT)
     {
       fail_msg_writer() << tr("Failed to update the remote data amount\nInvalid parameters");
@@ -3367,6 +3374,13 @@ bool simple_wallet::remote_data_renewal_start(const std::vector<std::string>& ar
 
   try
   {
+    // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      fail_msg_writer() << tr("This protocol will be implemented at block height ") << HF_BLOCK_HEIGHT_REMOTE_DATA;
+      return true;
+    }
+
     if (args.size() != PARAMETER_AMOUNT)
     {
       fail_msg_writer() << tr("Failed to start the renewal process\nInvalid parameters");
@@ -3508,6 +3522,20 @@ bool simple_wallet::remote_data_renewal_end(const std::vector<std::string>& args
 
   try
   {
+    // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      fail_msg_writer() << tr("This protocol will be implemented at block height ") << HF_BLOCK_HEIGHT_REMOTE_DATA;
+      return true;
+    }
+
+    // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      fail_msg_writer() << tr("This protocol will be implemented at block height ") << HF_BLOCK_HEIGHT_REMOTE_DATA;
+      return true;
+    }
+
     if (args.size() != PARAMETER_AMOUNT)
     {
       fail_msg_writer() << tr("Failed to renew the name\nInvalid parameters");
@@ -3649,6 +3677,13 @@ bool simple_wallet::update_remote_data(const std::vector<std::string>& args)
 
   try
   {
+    // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      fail_msg_writer() << tr("This protocol will be implemented at block height ") << HF_BLOCK_HEIGHT_REMOTE_DATA;
+      return true;
+    }
+
     if (args.size() != PARAMETER_AMOUNT)
     {
       fail_msg_writer() << tr("Failed to update the remote data\nInvalid parameters");
@@ -3803,6 +3838,13 @@ bool simple_wallet::remote_data_save_name(const std::vector<std::string>& args)
 
   try
   {
+    // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      fail_msg_writer() << tr("This protocol will be implemented at block height ") << HF_BLOCK_HEIGHT_REMOTE_DATA;
+      return true;
+    }
+
     if (args.size() != PARAMETER_AMOUNT)
     {
       fail_msg_writer() << tr("Failed to save the name\nInvalid parameters");
@@ -3951,6 +3993,13 @@ bool simple_wallet::remote_data_purchase_name(const std::vector<std::string>& ar
 
   try
   {
+    // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      fail_msg_writer() << tr("This protocol will be implemented at block height ") << HF_BLOCK_HEIGHT_REMOTE_DATA;
+      return true;
+    }
+
     if (args.size() != PARAMETER_AMOUNT)
     {
       fail_msg_writer() << tr("Failed to purchase the name\nInvalid parameters");
@@ -4459,27 +4508,27 @@ simple_wallet::simple_wallet()
   m_cmd_binder.set_handler("update_remote_data",
                            boost::bind(&simple_wallet::update_remote_data, this, _1),
                            tr("update_remote_data <item> <value>"),
-                           tr("Update your remote data)"));
+                           tr("Update your remote data"));
   m_cmd_binder.set_handler("remote_data_save_name",
                            boost::bind(&simple_wallet::remote_data_save_name, this, _1),
                            tr("remote_data_save_name <name>"),
-                           tr("Saves a name for 1 hour to purchase)"));
+                           tr("Saves a name for 1 hour to purchase"));
   m_cmd_binder.set_handler("remote_data_purchase_name",
                            boost::bind(&simple_wallet::remote_data_purchase_name, this, _1),
                            tr("remote_data_purchase_name <saddress> <paddress> <tx_hash>"),
-                           tr("Purchase a name)"));
+                           tr("Purchase a name"));
   m_cmd_binder.set_handler("remote_data_delegates_set_amount",
                            boost::bind(&simple_wallet::remote_data_delegates_set_amount, this, _1),
                            tr("remote_data_delegates_set_amount <amount>"),
-                           tr("Delegates can set the amount for the remote data)"));
+                           tr("Delegates can set the amount for the remote data"));
   m_cmd_binder.set_handler("remote_data_renewal_start",
                            boost::bind(&simple_wallet::remote_data_renewal_start, this, _1),
                            tr("remote_data_renewal_start"),
-                           tr("Start the renewal process)"));
+                           tr("Start the renewal process"));
   m_cmd_binder.set_handler("remote_data_renewal_end",
                            boost::bind(&simple_wallet::remote_data_renewal_end, this, _1),
                            tr("remote_data_renewal_end <tx_hash>"),
-                           tr("Finish the renewal process)"));
+                           tr("Finish the renewal process"));
   m_cmd_binder.set_handler("help",
                            boost::bind(&simple_wallet::help, this, _1),
                            tr("help [<command>]"),

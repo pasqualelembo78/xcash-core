@@ -65,6 +65,8 @@ using boost::asio::ip::tcp;
 #include "wallet/block_verifiers.h"
 #include "wallet/remote_data.h"
 
+using namespace cryptonote;
+
 #undef XCASH_DEFAULT_LOG_CATEGORY
 #define XCASH_DEFAULT_LOG_CATEGORY "wallet.rpc"
 
@@ -4321,6 +4323,13 @@ bool wallet_rpc_server::on_update_remote_data(const wallet_rpc::COMMAND_RPC_UPDA
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+      return false;
+    }
   // check if the wallet is open
   if (!m_wallet) return not_open(er);
 
@@ -4464,6 +4473,14 @@ bool wallet_rpc_server::on_remote_data_save_name(const wallet_rpc::COMMAND_RPC_R
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+      return false;
+    }
+
   // check if the wallet is open
   if (!m_wallet) return not_open(er);
 
@@ -4601,6 +4618,14 @@ bool wallet_rpc_server::on_remote_data_purchase_name(const wallet_rpc::COMMAND_R
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+      return false;
+    }
+
   // check if the wallet is open
   if (!m_wallet) return not_open(er);
 
@@ -4739,6 +4764,14 @@ bool wallet_rpc_server::on_remote_data_delegates_set_amount(const wallet_rpc::CO
 
   try
   {
+       // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+      return false;
+    }
+
   // check if the wallet is open
   if (!m_wallet) return not_open(er);
 
@@ -4877,6 +4910,14 @@ bool wallet_rpc_server::on_remote_data_renewal_start(const wallet_rpc::COMMAND_R
 
   try
   {
+      // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+      return false;
+    }
+
   // check if the wallet is open
   if (!m_wallet) return not_open(er);
 
@@ -5007,6 +5048,14 @@ bool wallet_rpc_server::on_remote_data_renewal_end(const wallet_rpc::COMMAND_RPC
 
   try
   {
+    // check for a valid block height
+    if (m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "This protocol will be implemented at block height " + std::to_string(HF_BLOCK_HEIGHT_REMOTE_DATA);
+      return false;
+    }
+
   // check if the wallet is open
   if (!m_wallet) return not_open(er);
 
@@ -5117,6 +5166,8 @@ bool wallet_rpc_server::on_remote_data_renewal_end(const wallet_rpc::COMMAND_RPC
   }
   return true;
 }
+
+
 
 
 }

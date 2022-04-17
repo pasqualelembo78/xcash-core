@@ -2299,5 +2299,6 @@ struct COMMAND_RPC_REMOTE_DATA_RENEWAL_END
     };
   };
 
+
 }
 }
