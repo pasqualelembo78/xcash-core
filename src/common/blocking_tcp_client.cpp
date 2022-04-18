@@ -53,6 +53,27 @@ std::string client::read_until(char until, boost::posix_time::time_duration time
   return line;
 }
 
+std::string client::read_until_http(const char* until, boost::posix_time::time_duration timeout)
+{
+  deadline_.expires_from_now(timeout);
+
+  boost::system::error_code ec = boost::asio::error::would_block;
+  boost::asio::async_read_until(socket_, input_buffer_, until, var(ec) = _1);
+  
+  // Block until the asynchronous operation has completed.
+  do
+    io_service_.run_one();
+  while (ec == boost::asio::error::would_block);
+
+  if (ec)
+    throw boost::system::system_error(ec);
+
+  std::string line;
+  std::istream is(&input_buffer_);
+  std::getline(is, line);
+  return line;
+}
+
 void client::write_line(const std::string &line, boost::posix_time::time_duration timeout)
 {
   std::string data = line ;//+ "\n";

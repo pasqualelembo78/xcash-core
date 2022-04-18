@@ -65,8 +65,6 @@ using boost::asio::ip::tcp;
 #include "wallet/block_verifiers.h"
 #include "wallet/remote_data.h"
 
-using namespace cryptonote;
-
 #undef XCASH_DEFAULT_LOG_CATEGORY
 #define XCASH_DEFAULT_LOG_CATEGORY "wallet.rpc"
 
@@ -634,8 +632,22 @@ namespace tools
     std::string extra_nonce;
     for (auto it = destinations.begin(); it != destinations.end(); it++)
     {
+ 
+
+
+
+
+
+      // remote data protocol
       // get the address if using remote data
-const std::string receiver_public_address = (it->address.find(".xcash") == std::string::npos && it->address.find(".sxcash") == std::string::npos && it->address.find(".pxcash") == std::string::npos) ? it->address : get_address_from_name(it->address);
+      const std::string receiver_public_address = ((m_wallet->get_blockchain_current_height() < HF_BLOCK_HEIGHT_REMOTE_DATA) || (it->address.find(".xcash") == std::string::npos && it->address.find(".sxcash") == std::string::npos && it->address.find(".pxcash") == std::string::npos)) ? it->address : get_address_from_name(it->address);
+
+
+
+
+
+
+
 
       cryptonote::address_parse_info info;
       cryptonote::tx_destination_entry de;
@@ -830,11 +842,13 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
   //------------------------------------------------------------------------------------------------------------------------------
   bool wallet_rpc_server::on_transfer(const wallet_rpc::COMMAND_RPC_TRANSFER::request& req, wallet_rpc::COMMAND_RPC_TRANSFER::response& res, epee::json_rpc::error& er)
   {
-
     std::vector<cryptonote::tx_destination_entry> dsts;
     std::vector<uint8_t> extra;
     bool remote_data_saddress = false;
     bool remote_data_paddress = false;
+    bool turbo_tx = false;
+    bool get_tx_key = req.get_tx_key;
+    std::string string = "";
 
     LOG_PRINT_L3("on_transfer starts");
     if (!m_wallet) return not_open(er);
@@ -859,54 +873,90 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
 
       // check for a valid tx_privacy_settings
       std::string tx_privacy_settings = req.tx_privacy_settings != "" ? req.tx_privacy_settings : "private";
-      for (auto it = req.destinations.begin(); it != req.destinations.end(); it++)
-      {
-        if (it->address.find(".sxcash") != std::string::npos)
-        {     
-          remote_data_saddress = true;
-        }  
-        else if (it->address.find(".pxcash") != std::string::npos)
-        {     
-          remote_data_paddress = true;
-        }  
-        else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "saddress")
-        {     
-          remote_data_saddress = true;
-        }  
-        else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "paddress")
-        {     
-          remote_data_paddress = true;
-        }  
-      }
-      if (remote_data_saddress && remote_data_paddress)
+
+      // error check
+      if ((tx_privacy_settings == "tprivate" || tx_privacy_settings == "tpublic" || tx_privacy_settings == "public") && req.destinations.size() != 1)
       {
         er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
-        er.message = "Invalid tx_privacy_settings. You can not send a mix of .pxcash and .sxcash at the same time";
+        er.message = "Invalid tx_privacy_settings. You can not have multiple destinations for a public or turbo tx";
         return false;
-      }
-      else if (!remote_data_saddress && remote_data_paddress)
-      {
-        tx_privacy_settings = "public";
-      }
-      else if (remote_data_saddress && !remote_data_paddress)
-      {
-        tx_privacy_settings = "private";
       }
 
-      // check to make sure this account is not limited in sending certain types of transactions
-      std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);
-      if (tx_privacy_settings_status == "saddress" && tx_privacy_settings == "public")
+      // check for turbo tx
+      if (tx_privacy_settings == "tprivate")
       {
-        er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
-        er.message = "This is a saddress, and can only send and receive private transactions, but you are attempting to send a public transaction";
-        return false;
+        tx_privacy_settings = "private";
+        get_tx_key = true;
+        turbo_tx = true;        
       }
-      else if (tx_privacy_settings_status == "paddress" && tx_privacy_settings == "private")
+      else if (tx_privacy_settings == "tpublic")
       {
-        er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
-        er.message = "This is a paddress, and can only send and receive public transactions, but you are attempting to send a private transaction";
-        return false;
+        tx_privacy_settings = "public";
+        get_tx_key = true;
+        turbo_tx = true;        
       }
+
+
+
+
+
+      // remote data protocol
+      if (m_wallet->get_blockchain_current_height() >= HF_BLOCK_HEIGHT_REMOTE_DATA)
+      {      
+        for (auto it = req.destinations.begin(); it != req.destinations.end(); it++)
+        {
+          if (it->address.find(".sxcash") != std::string::npos)
+          {     
+            remote_data_saddress = true;
+          }  
+          else if (it->address.find(".pxcash") != std::string::npos)
+          {     
+            remote_data_paddress = true;
+          }  
+          else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "saddress")
+          {     
+            remote_data_saddress = true;
+          }  
+          else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "paddress")
+          {     
+            remote_data_paddress = true;
+          }  
+        }
+        if (remote_data_saddress && remote_data_paddress)
+        {
+          er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+          er.message = "Invalid tx_privacy_settings. You can not send a mix of .pxcash and .sxcash at the same time";
+          return false;
+        }
+        else if (!remote_data_saddress && remote_data_paddress)
+        {
+          tx_privacy_settings = "public";
+        }
+        else if (remote_data_saddress && !remote_data_paddress)
+        {
+          tx_privacy_settings = "private";
+        }
+      
+        // check to make sure this account is not limited in sending certain types of transactions
+        std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);
+        if (tx_privacy_settings_status == "saddress" && tx_privacy_settings == "public")
+        {
+          er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+          er.message = "This is a saddress, and can only send and receive private transactions, but you are attempting to send a public transaction";
+          return false;
+        }
+        else if (tx_privacy_settings_status == "paddress" && tx_privacy_settings == "private")
+        {
+          er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+          er.message = "This is a paddress, and can only send and receive public transactions, but you are attempting to send a private transaction";
+          return false;
+        }
+      }
+
+
+
+
+      
 
 
       // convert the tx privacy settings to lower case
@@ -946,8 +996,36 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
         return false;
       }
 
-      return fill_response(ptx_vector, req.get_tx_key, res.tx_key, res.amount, res.fee, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
-          res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
+      // get the tx data
+      fill_response(ptx_vector, get_tx_key, res.tx_key, res.amount, res.fee, res.multisig_txset, res.unsigned_txset, req.do_not_relay,res.tx_hash, req.get_tx_hex, res.tx_blob, req.get_tx_metadata, res.tx_metadata, er);
+   
+
+
+
+
+
+
+
+      // turbo tx protocol
+      if (turbo_tx && m_wallet->get_blockchain_current_height() >= HF_BLOCK_HEIGHT_TURBO_TX)
+      {
+        // create the data
+        string = string + "sender=" + m_wallet->get_account().get_public_address_str(m_wallet->nettype());        
+        for (auto it = req.destinations.begin(); it != req.destinations.end(); it++)
+        {
+          string = string + "&receiver=" + it->address;
+          string = string + "&amount=" + std::to_string(it->amount);
+        }
+        string = string + "&tx_hash=" + res.tx_hash + "&tx_key=" + res.tx_key;          
+        res.tx_metadata = send_and_receive_http_data(string);
+      }
+
+
+
+
+
+
+      return true;
     }
     catch (const std::exception& e)
     {
@@ -965,6 +1043,9 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
 
     bool remote_data_saddress = false;
     bool remote_data_paddress = false;
+    bool turbo_tx = false;
+    bool get_tx_key = req.get_tx_keys;
+    std::string string = "";
 
     if (!m_wallet) return not_open(er);
     if (m_restricted)
@@ -991,34 +1072,86 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
       {
         mixin = m_wallet->adjust_mixin(req.mixin);
       }
-      
+
       // check for a valid tx_privacy_settings
       std::string tx_privacy_settings = req.tx_privacy_settings != "" ? req.tx_privacy_settings : "private";
-      for (auto it = req.destinations.begin(); it != req.destinations.end(); it++)
-      {
-        if (it->address.find(".sxcash") == std::string::npos)
-        {     
-          remote_data_saddress = true;
-        }  
-        if (it->address.find(".pxcash") == std::string::npos)
-        {     
-          remote_data_paddress = true;
-        }  
-      }
-      if (remote_data_saddress && remote_data_paddress)
+
+      // error check
+      if ((tx_privacy_settings == "tprivate" || tx_privacy_settings == "tpublic" || tx_privacy_settings == "public") && req.destinations.size() != 1)
       {
         er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
-        er.message = "Invalid tx_privacy_settings. You can not send a mix of .pxcash and .sxcash at the same time";
+        er.message = "Invalid tx_privacy_settings. You can not have multiple destinations for a public or turbo tx";
         return false;
       }
-      else if (!remote_data_saddress && remote_data_paddress)
-      {
-        tx_privacy_settings = "public";
-      }
-      else if (remote_data_saddress && !remote_data_paddress)
+
+      // check for turbo tx
+      if (tx_privacy_settings == "tprivate")
       {
         tx_privacy_settings = "private";
+        get_tx_key = true;
+        turbo_tx = true;        
       }
+      else if (tx_privacy_settings == "tpublic")
+      {
+        tx_privacy_settings = "public";
+        get_tx_key = true;
+        turbo_tx = true;        
+      }
+
+
+
+
+
+
+      // remote data protocol
+      if (m_wallet->get_blockchain_current_height() >= HF_BLOCK_HEIGHT_REMOTE_DATA)
+      {
+        for (auto it = req.destinations.begin(); it != req.destinations.end(); it++)
+        {
+          if (it->address.find(".sxcash") == std::string::npos)
+          {     
+            remote_data_saddress = true;
+          }  
+          if (it->address.find(".pxcash") == std::string::npos)
+          {     
+            remote_data_paddress = true;
+          }  
+        }
+        if (remote_data_saddress && remote_data_paddress)
+        {
+          er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+          er.message = "Invalid tx_privacy_settings. You can not send a mix of .pxcash and .sxcash at the same time";
+          return false;
+        }
+        else if (!remote_data_saddress && remote_data_paddress)
+        {
+          tx_privacy_settings = "public";
+        }
+        else if (remote_data_saddress && !remote_data_paddress)
+        {
+          tx_privacy_settings = "private";
+        }
+
+        // check to make sure this account is not limited in sending certain types of transactions
+        std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);
+        if (tx_privacy_settings_status == "saddress" && tx_privacy_settings == "public")
+        {
+          er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+          er.message = "This is a saddress, and can only send and receive private transactions, but you are attempting to send a public transaction";
+          return false;
+        }
+        else if (tx_privacy_settings_status == "paddress" && tx_privacy_settings == "private")
+        {
+          er.code = WALLET_RPC_ERROR_CODE_TX_NOT_POSSIBLE;
+          er.message = "This is a paddress, and can only send and receive public transactions, but you are attempting to send a private transaction";
+          return false;
+        }
+      }
+
+
+
+
+
 
 
       // convert the tx privacy settings to lower case
@@ -1039,8 +1172,40 @@ const std::string receiver_public_address = (it->address.find(".xcash") == std::
       std::vector<wallet2::pending_tx> ptx_vector = m_wallet->create_transactions_2(dsts, mixin, req.unlock_time, tx_privacy_settings, priority, extra, req.account_index, req.subaddr_indices);
       LOG_PRINT_L2("on_transfer_split called create_transactions_2");
 
-      return fill_response(ptx_vector, req.get_tx_keys, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,
-          res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
+      fill_response(ptx_vector, get_tx_key, res.tx_key_list, res.amount_list, res.fee_list, res.multisig_txset, res.unsigned_txset, req.do_not_relay,res.tx_hash_list, req.get_tx_hex, res.tx_blob_list, req.get_tx_metadata, res.tx_metadata_list, er);
+
+
+
+
+
+
+
+      // turbo tx protocol
+      if (turbo_tx && m_wallet->get_blockchain_current_height() >= HF_BLOCK_HEIGHT_TURBO_TX)
+      {
+        // create the pointers
+        auto destinations_pointer = req.destinations.begin();
+        auto tx_hash_pointer = res.tx_hash_list.begin();
+        auto tx_key_pointer = res.tx_key_list.begin();
+
+        for (size_t i = 0; i < res.tx_hash_list.size(); i++)
+        {
+          // create the data
+          string = "sender=" + m_wallet->get_account().get_public_address_str(m_wallet->nettype()) + "&receiver=" + destinations_pointer->address + "&amount=" + std::to_string(destinations_pointer->amount) + "&tx_hash=" + *tx_hash_pointer + "&tx_key=" + *tx_key_pointer; 
+          res.tx_metadata_list.push_back(send_and_receive_http_data(string));
+    
+          tx_hash_pointer = std::next(tx_hash_pointer);
+          tx_key_pointer = std::next(tx_key_pointer);
+        }
+      }
+
+
+
+
+
+
+
+      return true;
     }
     catch (const std::exception& e)
     {

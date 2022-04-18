@@ -6559,6 +6559,21 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
   bool remote_data_paddress = false;
   std::vector<std::string> local_args = args_;
   std::string tx_privacy_settings = local_args[0];
+  std::string string = "";
+  bool turbo_tx = false;
+
+  
+  if (tx_privacy_settings == "tprivate")
+  {
+    tx_privacy_settings = "private";
+    turbo_tx = true; 
+  }
+  else if (tx_privacy_settings == "tpublic")
+  {
+    tx_privacy_settings = "public";
+    turbo_tx = true; 
+  }
+
   if (tx_privacy_settings != "private" && tx_privacy_settings != "public")
   {
     tx_privacy_settings = "private";
@@ -6568,59 +6583,69 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
     local_args.erase(local_args.begin() + 0);
   }
 
-  // check for a valid tx_privacy_settings
-  for (size_t i = 0; i < local_args.size(); i++)
-  {
-    if (local_args[i].find(".sxcash") != std::string::npos)
-    { 
-      remote_data_saddress = true;
-    }  
-    else if (local_args[i].find(".pxcash") != std::string::npos)
-    {    
-      remote_data_paddress = true;
-    }  
-    else if (local_args[i].find(".xcash") == std::string::npos && get_remote_data_address_settings(local_args[i]) == "saddress")
-    {    
-      remote_data_saddress = true;
-    } 
-    else if (local_args[i].find(".xcash") == std::string::npos && get_remote_data_address_settings(local_args[i]) == "paddress")
-    {    
-      remote_data_paddress = true;
-    } 
-  }
-  if (remote_data_saddress && remote_data_paddress)
-  {
-    fail_msg_writer() << ("Can not send transaction to a saddress and paddress at the same time");
-    return true;
-  }
-  else if (!remote_data_saddress && remote_data_paddress)
-  {
-    tx_privacy_settings = "public";
-  }
-  else if (remote_data_saddress && !remote_data_paddress)
-  {
-    tx_privacy_settings = "private";
-  }
 
-  // check to make sure this account is not limited in sending certain types of transactions
-  std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);
-  if (tx_privacy_settings_status == "saddress" && tx_privacy_settings == "public")
-  {
-    fail_msg_writer() << ("This is a saddress, and can only send and receive private transactions, but you are attempting to send a public transaction");
-    return true;
-  }
-  else if (tx_privacy_settings_status == "paddress" && tx_privacy_settings == "private")
-  {
-    fail_msg_writer() << ("This is a paddress, and can only send and receive public transactions, but you are attempting to send a private transaction");
-    return true;
-  }
 
-  // get any remote data to their addresses
-  for (size_t i = 0; i < local_args.size(); i++)
-  {
-    if (local_args[i].find(".xcash") != std::string::npos || local_args[i].find(".sxcash") != std::string::npos || local_args[i].find(".pxcash") != std::string::npos)
+
+
+
+
+  // remote data protocol
+  if (m_wallet->get_blockchain_current_height() >= HF_BLOCK_HEIGHT_REMOTE_DATA)
+  {  
+    // check for a valid tx_privacy_settings
+    for (size_t i = 0; i < local_args.size(); i++)
     {
-      local_args[i] = get_address_from_name(local_args[i]);
+      if (local_args[i].find(".sxcash") != std::string::npos)
+      { 
+        remote_data_saddress = true;
+      }  
+      else if (local_args[i].find(".pxcash") != std::string::npos)
+      {    
+        remote_data_paddress = true;
+      }  
+      else if (local_args[i].find(".xcash") == std::string::npos && get_remote_data_address_settings(local_args[i]) == "saddress")
+      {    
+        remote_data_saddress = true;
+      } 
+      else if (local_args[i].find(".xcash") == std::string::npos && get_remote_data_address_settings(local_args[i]) == "paddress")
+      {    
+        remote_data_paddress = true;
+      } 
+    }
+    if (remote_data_saddress && remote_data_paddress)
+    {
+      fail_msg_writer() << ("Can not send transaction to a saddress and paddress at the same time");
+      return true;
+    }
+    else if (!remote_data_saddress && remote_data_paddress)
+    {
+      tx_privacy_settings = "public";
+    }
+    else if (remote_data_saddress && !remote_data_paddress)
+    {
+      tx_privacy_settings = "private";
+    }
+
+    // check to make sure this account is not limited in sending certain types of transactions
+    std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);
+    if (tx_privacy_settings_status == "saddress" && tx_privacy_settings == "public")
+    {
+      fail_msg_writer() << ("This is a saddress, and can only send and receive private transactions, but you are attempting to send a public transaction");
+      return true;
+    }
+    else if (tx_privacy_settings_status == "paddress" && tx_privacy_settings == "private")
+    {
+      fail_msg_writer() << ("This is a paddress, and can only send and receive public transactions, but you are attempting to send a private transaction");
+      return true;
+    }
+
+    // get any remote data to their addresses
+    for (size_t i = 0; i < local_args.size(); i++)
+    {
+      if (local_args[i].find(".xcash") != std::string::npos || local_args[i].find(".sxcash") != std::string::npos || local_args[i].find(".pxcash") != std::string::npos)
+      {
+        local_args[i] = get_address_from_name(local_args[i]);
+      }
     }
   }
 
@@ -7034,6 +7059,29 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
     }
     else
     {
+
+
+
+
+
+
+
+      // turbo tx protocol
+      if (turbo_tx && m_wallet->get_blockchain_current_height() >= HF_BLOCK_HEIGHT_TURBO_TX)
+      {
+        for (auto & item : ptx_vector)
+        {
+          // create the data
+          string = "sender=" + m_wallet->get_account().get_public_address_str(m_wallet->nettype()) + "&receiver=" + local_args[0] + "&amount=" + std::to_string((int)(std::stod(local_args[1]) * COIN)) + "&tx_hash=" + string_tools::pod_to_hex(cryptonote::get_transaction_hash(item.tx)) + "&tx_key=" + string_tools::pod_to_hex(item.tx_key);
+          success_msg_writer(true) << tr("Turbo tx id: ") << send_and_receive_http_data(string) << " for tx " << cryptonote::get_transaction_hash(item.tx);
+        }
+      }
+
+
+
+
+
+
       commit_or_save(ptx_vector, m_do_not_relay);
     }
   }
