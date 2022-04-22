@@ -1105,14 +1105,22 @@ namespace tools
 
       // remote data protocol
       if (m_wallet->get_blockchain_current_height() >= HF_BLOCK_HEIGHT_REMOTE_DATA)
-      {
+      {      
         for (auto it = req.destinations.begin(); it != req.destinations.end(); it++)
         {
-          if (it->address.find(".sxcash") == std::string::npos)
+          if (it->address.find(".sxcash") != std::string::npos)
           {     
             remote_data_saddress = true;
           }  
-          if (it->address.find(".pxcash") == std::string::npos)
+          else if (it->address.find(".pxcash") != std::string::npos)
+          {     
+            remote_data_paddress = true;
+          }  
+          else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "saddress")
+          {     
+            remote_data_saddress = true;
+          }  
+          else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "paddress")
           {     
             remote_data_paddress = true;
           }  
@@ -1131,7 +1139,7 @@ namespace tools
         {
           tx_privacy_settings = "private";
         }
-
+      
         // check to make sure this account is not limited in sending certain types of transactions
         std::string tx_privacy_settings_status = get_remote_data_address_settings(current_public_address);
         if (tx_privacy_settings_status == "saddress" && tx_privacy_settings == "public")
@@ -1147,7 +1155,6 @@ namespace tools
           return false;
         }
       }
-
 
 
 
