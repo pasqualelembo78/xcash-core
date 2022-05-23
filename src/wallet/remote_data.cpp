@@ -48,11 +48,10 @@ std::string get_remote_data_address_settings(std::string public_address)
   std::size_t count = 0;
   int random_network_data_node;
   int network_data_nodes_array[NETWORK_DATA_NODES_AMOUNT];
-  
  
     if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
     {
-      exit(0); 
+      //exit(0); 
     }
 
     // create the data
