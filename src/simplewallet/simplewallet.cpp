@@ -6603,11 +6603,19 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
       {    
         remote_data_paddress = true;
       } 
-      else if (local_args[i].find(".xcash") == std::string::npos && get_remote_data_address_settings(get_address_from_name(local_args[i-1])) == "saddress")
-      {    
-        remote_data_saddress = true;
+      else if (local_args[i].find(".xcash") != std::string::npos)
+      { 
+        std::string data = get_remote_data_address_settings(get_address_from_name(local_args[i]));
+        if (data == "saddress")
+        {   
+          remote_data_saddress = true;
+        }
+        else if (data == "paddress")
+        {   
+          remote_data_paddress = true;
+        }        
       } 
-      else if (local_args[i].find(".xcash") == std::string::npos && get_remote_data_address_settings(get_address_from_name(local_args[i-1])) == "paddress")
+      else if (local_args[i].find(".xcash") != std::string::npos && get_remote_data_address_settings(get_address_from_name(local_args[i])) == "paddress")
       {    
         remote_data_paddress = true;
       }
