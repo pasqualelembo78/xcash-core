@@ -7077,7 +7077,7 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
         {
           // create the data
           string = "sender=" + m_wallet->get_account().get_public_address_str(m_wallet->nettype()) + "&receiver=" + local_args[0] + "&amount=" + std::to_string((int)(std::stod(local_args[1]) * COIN)) + "&tx_hash=" + string_tools::pod_to_hex(cryptonote::get_transaction_hash(item.tx)) + "&tx_key=" + string_tools::pod_to_hex(item.tx_key);
-          success_msg_writer(true) << tr("Turbo tx id: ") << send_and_receive_http_data(string) << " for tx " << cryptonote::get_transaction_hash(item.tx);
+          success_msg_writer(true) << "Turbo tx id: " << send_and_receive_http_data(string) << " for tx " << cryptonote::get_transaction_hash(item.tx);
         }
       }
 

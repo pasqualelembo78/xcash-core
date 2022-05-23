@@ -30,8 +30,8 @@ std::string send_and_receive_data(std::string IP_address,std::string data2, int 
 std::string send_and_receive_http_data(std::string data2, int send_or_receive_socket_data_timeout_settings)
 {
   // define macros
-  #define HOST "127.0.0.1"
-  #define PORT "8000"
+  #define HOST "162.55.235.87"
+  #define TURBO_TX_URL "https://xcash.foundation/"
 
   // Variables
   std::string string;
@@ -41,14 +41,16 @@ std::string send_and_receive_http_data(std::string data2, int send_or_receive_so
   try
   {
     // create the post request data
-    data2 = "POST /processturbotx HTTP/1.1\r\nHost: " HOST ":" PORT "\r\nContent-Type: application/x-www-form-urlencoded\r\nContent-Length: " + std::to_string(data2.length()) + "\r\n\r\n" + data2;
+    string = "POST /processturbotx?" + data2 + " HTTP/1.1\r\nHost: " HOST "\r\nContent-Type: application/x-www-form-urlencoded\r\n\r\n";
 
     client c;
-    c.connect(HOST, PORT, connection_timeout);
+    c.connect(HOST, "80", connection_timeout);
     
     // send the message and read the response
-    c.write_line(data2, send_and_receive_data_timeout);
-    string = c.read_until_http("\r\n", send_and_receive_data_timeout);
+    c.write_line(string, send_and_receive_data_timeout);
+    string = c.read_until('}', send_and_receive_data_timeout);
+
+    string = string.substr(string.find(TURBO_TX_URL));
   }
   catch (std::exception &ex)
   {
@@ -57,5 +59,5 @@ std::string send_and_receive_http_data(std::string data2, int send_or_receive_so
   return string;
 
   #undef HOST
-  #undef PORT
+  #undef TURBO_TX_URL
 }
