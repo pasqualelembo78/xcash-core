@@ -6614,10 +6614,6 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
         {   
           remote_data_paddress = true;
         }        
-      } 
-      else if (local_args[i].find(".xcash") != std::string::npos && get_remote_data_address_settings(get_address_from_name(local_args[i])) == "paddress")
-      {    
-        remote_data_paddress = true;
       }
     }
     if (remote_data_saddress && remote_data_paddress)
