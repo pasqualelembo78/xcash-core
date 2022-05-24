@@ -31,7 +31,7 @@ std::string send_and_receive_http_data(std::string data2, int send_or_receive_so
 {
   // define macros
   #define HOST "162.55.235.87"
-  #define TURBO_TX_URL "https://xcash.foundation/"
+  #define TURBO_TX_URL "http://" HOST "/"
 
   // Variables
   std::string string;

@@ -41,8 +41,6 @@ public:
 
     std::string read_until(char until, boost::posix_time::time_duration timeout);
 
-    std::string read_until_http(const char* until, boost::posix_time::time_duration timeout);
-
     void write_line(const std::string &line, boost::posix_time::time_duration timeout);
 
 private:
