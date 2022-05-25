@@ -913,14 +913,18 @@ namespace tools
           {     
             remote_data_paddress = true;
           }  
-          else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "saddress")
+          else if (it->address.find(".xcash") == std::string::npos && it->address.length() == 98)
           {     
-            remote_data_saddress = true;
-          }  
-          else if (it->address.find(".xcash") == std::string::npos && get_remote_data_address_settings(it->address) == "paddress")
-          {     
-            remote_data_paddress = true;
-          }  
+            std::string data = get_remote_data_address_settings(it->address);
+            if (data == "saddress")
+            {   
+              remote_data_saddress = true;
+            }
+            else if (data == "paddress")
+            {   
+              remote_data_paddress = true;
+            }    
+          }
         }
         if (remote_data_saddress && remote_data_paddress)
         {
