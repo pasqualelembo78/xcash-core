@@ -4049,7 +4049,7 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
   struct network_data_nodes_list {
     std::string network_data_nodes_public_address[NETWORK_DATA_NODES_AMOUNT]; // The network data nodes public address
     std::string network_data_nodes_IP_address[NETWORK_DATA_NODES_AMOUNT]; // The network data nodes IP address
-};
+  };
 
   // Variables
   std::string string = "";
@@ -4058,13 +4058,13 @@ bool get_network_block_database_hash(std::vector<std::string> &block_verifiers_d
   std::string current_block_verifiers_list_IP_address;
   std::string current_block_verifier;
   char message[2048];
-  std::size_t total_delegates;
+  std::size_t total_delegates = 0;
   std::size_t count = 0;
   std::size_t count2 = 0;
   std::size_t count3 = 0;
   std::size_t display_count = 0;
-  int random_network_data_node;
-  int network_data_nodes_array[NETWORK_DATA_NODES_AMOUNT];
+  int random_network_data_node = 0;
+  int network_data_nodes_array[NETWORK_DATA_NODES_AMOUNT] = {0};
   int settings = 0;
   std::size_t blocks_amount = 0;
 
