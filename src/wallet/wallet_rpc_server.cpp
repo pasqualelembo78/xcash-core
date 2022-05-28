@@ -4820,7 +4820,7 @@ bool wallet_rpc_server::on_remote_data_purchase_name(const wallet_rpc::COMMAND_R
   }
 
   // check if the items are valid
-  if (req.saddress.length() != XCASH_WALLET_LENGTH || req.saddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || req.paddress.length() != XCASH_WALLET_LENGTH || req.paddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || req.tx_hash.length() != 64)
+  if (req.saddress.length() != XCASH_WALLET_LENGTH || req.saddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || req.saddress_signature.length() != XCASH_SIGN_DATA_LENGTH || req.saddress_signature.substr(0,sizeof(XCASH_SIGN_DATA_PREFIX)-1) != XCASH_SIGN_DATA_PREFIX || req.paddress.length() != XCASH_WALLET_LENGTH || req.paddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || req.paddress_signature.length() != XCASH_SIGN_DATA_LENGTH || req.paddress_signature.substr(0,sizeof(XCASH_SIGN_DATA_PREFIX)-1) != XCASH_SIGN_DATA_PREFIX || req.tx_hash.length() != 64)
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to purchase the name";
@@ -4879,7 +4879,7 @@ bool wallet_rpc_server::on_remote_data_purchase_name(const wallet_rpc::COMMAND_R
   current_block_height = m_wallet->get_blockchain_current_height();
  
   // create the data
-  data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_PURCHASE_NAME|" + req.saddress + "|" + req.paddress + "|" + req.tx_hash + "|" + public_address + "|";
+  data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_PURCHASE_NAME|" + req.saddress + "|" + req.saddress_signature + "|" + req.paddress + "|" + req.paddress_signature + "|" + req.tx_hash + "|" + public_address + "|";
   
   // sign the data    
   data3 = m_wallet->sign(data2);

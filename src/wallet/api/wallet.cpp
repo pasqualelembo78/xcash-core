@@ -3274,7 +3274,7 @@ std::string WalletImpl::remote_data_save_name(const std::string &name)  {
   return "Failed to save the name"+ errorInfo;  
  }
 
-std::string WalletImpl::remote_data_purchase_name(const std::string &saddress,const td::string &paddress,const td::string &tx_hash)  {
+std::string WalletImpl::remote_data_purchase_name(const std::string &saddress,const std::string &saddress_signature,const std::string &paddress,const std::string &paddress_signature,const std::string &tx_hash)  {
   // Variables
   std::string public_address = "";
   tools::wallet2::transfer_container transfers;
@@ -3299,7 +3299,7 @@ std::string WalletImpl::remote_data_purchase_name(const std::string &saddress,co
     }
 
     // check if the item is valid
-    if (saddress.length() != XCASH_WALLET_LENGTH || saddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || paddress.length() != XCASH_WALLET_LENGTH || paddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || tx_hash.length() != 64)
+    if (saddress.length() != XCASH_WALLET_LENGTH || saddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || saddress_signature.length() != XCASH_SIGN_DATA_LENGTH || saddress_signature.substr(0,sizeof(XCASH_SIGN_DATA_PREFIX)-1) != XCASH_SIGN_DATA_PREFIX || paddress.length() != XCASH_WALLET_LENGTH || paddress.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || paddress_signature.length() != XCASH_SIGN_DATA_LENGTH || paddress_signature.substr(0,sizeof(XCASH_SIGN_DATA_PREFIX)-1) != XCASH_SIGN_DATA_PREFIX || tx_hash.length() != 64)
     {
       return "Failed to purchase the name";  
     }
@@ -3352,7 +3352,7 @@ std::string WalletImpl::remote_data_purchase_name(const std::string &saddress,co
     current_block_height = m_wallet->get_blockchain_current_height();
   
     // create the data
-    data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_PURCHASE_NAME|" + saddress + "|" + paddress + "|" + tx_hash + "|" + public_address + "|";
+    data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_PURCHASE_NAME|" + saddress + "|" + saddress_signature + "|" + paddress + "|" + paddress_signature + "|" + tx_hash + "|" + public_address + "|";
  
     // sign the data    
     data3 = m_wallet->sign(data2);

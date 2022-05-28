@@ -3989,7 +3989,7 @@ bool simple_wallet::remote_data_purchase_name(const std::vector<std::string>& ar
   uint64_t current_block_height;
 
   // define macros
-  #define PARAMETER_AMOUNT 3
+  #define PARAMETER_AMOUNT 5
 
   try
   {
@@ -4022,7 +4022,7 @@ bool simple_wallet::remote_data_purchase_name(const std::vector<std::string>& ar
     }
 
     // error check
-    if (args[0].length() != XCASH_WALLET_LENGTH || args[0].substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || args[1].length() != XCASH_WALLET_LENGTH || args[1].substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || args[2].length() != 64)
+    if (args[0].length() != XCASH_WALLET_LENGTH || args[0].substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || args[1].length() != XCASH_SIGN_DATA_LENGTH || args[1].substr(0,sizeof(XCASH_SIGN_DATA_PREFIX)-1) != XCASH_SIGN_DATA_PREFIX || args[2].length() != XCASH_WALLET_LENGTH || args[2].substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX || args[3].length() != XCASH_SIGN_DATA_LENGTH || args[3].substr(0,sizeof(XCASH_SIGN_DATA_PREFIX)-1) != XCASH_SIGN_DATA_PREFIX || args[4].length() != 64)
     { 
       fail_msg_writer() << tr("Failed to purchase the name");
       return true;  
@@ -4081,7 +4081,7 @@ bool simple_wallet::remote_data_purchase_name(const std::vector<std::string>& ar
     current_block_height = m_wallet->get_blockchain_current_height();
  
     // create the data
-    data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_PURCHASE_NAME|" + args[0] + "|" + args[1] + "|" + args[2] + "|" + public_address + "|";
+    data2 = "NODES_TO_BLOCK_VERIFIERS_REMOTE_DATA_PURCHASE_NAME|" + args[0] + "|" + args[1] + "|" + args[2] + "|" + args[3] + "|" + args[4] + "|" + public_address + "|";
  
     // sign the data    
     data3 = m_wallet->sign(data2);
