@@ -8437,8 +8437,14 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
   size_t num_nondust_outputs = 0;
   size_t num_dust_outputs = 0;
   std::vector<std::size_t> outputs_staked = get_staked_outputs();
-  for (size_t i = 0; i < m_transfers.size(); ++i)
+
+  if (stacked_balance_all())
   {
+    goto START2;
+  }
+
+  for (size_t i = 0; i < m_transfers.size(); ++i)
+  { 
     const transfer_details& td = m_transfers[i];
     if (m_ignore_fractional_outputs && td.amount() < fractional_threshold)
     {
@@ -8488,6 +8494,8 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
     }
     START:;
   }
+
+  START2:;
 
   // shuffle & sort output indices
   {
@@ -8626,7 +8634,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
     const transfer_details &td = m_transfers[idx];
     LOG_PRINT_L2("Picking output " << idx << ", amount " << print_money(td.amount()) << ", ki " << td.m_key_image);
 
-    if (check_if_output_is_staked(idx))
+    if (stacked_balance_all() || check_if_output_is_staked(idx))
     {
       continue;
     }

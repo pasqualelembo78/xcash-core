@@ -3600,6 +3600,12 @@ namespace tools
   }
   //------------------------------------------------------------------------------------------------------------------------------
 
+bool is_number(const std::string& s)
+{
+    return !s.empty() && std::find_if(s.begin(), 
+        s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+}
+
 bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req, wallet_rpc::COMMAND_RPC_VOTE::response& res, epee::json_rpc::error& er)
 {
   // Variables
@@ -3636,6 +3642,45 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
     er.message = "Failed to send the vote";
     return false;
   }
+  if (!is_number(req.amount) && req.amount != "all")
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to send the vote";
+    return false;
+  }
+
+  // set the reserve proof settings
+  if (req.amount != "all")
+  {
+    size_t number;
+    sscanf(req.amount.c_str(), "%zu", &number);
+
+    if (number < MINIMUM_VOTE_AMOUNT)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "Failed to send the vote";
+      return true;
+    }
+
+    account_minreserve = std::make_pair(0, number * COIN);
+    if (!m_wallet->create_staked_outputs(number,false))
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "Failed to send the vote";
+      m_wallet->delete_staked_outputs();
+      return false;
+    }
+  }
+  else
+  {
+    if (!m_wallet->create_staked_outputs(0,true))
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "Failed to send the vote";
+      m_wallet->delete_staked_outputs();
+      return false;
+    }
+  }
 
   // get the wallet transfers   
   m_wallet->get_transfers(transfers);
@@ -3656,6 +3701,7 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   {
     er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
     er.message = "Invalid address";
+    m_wallet->delete_staked_outputs();
     return false;
   }
  
@@ -3668,6 +3714,7 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   {
      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
      er.message = "Failed to send the vote";
+     m_wallet->delete_staked_outputs();
      return false;  
   }
 
@@ -3676,6 +3723,7 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to send the vote\nReserve proof is over the maximum length";
+    m_wallet->delete_staked_outputs();
     return false;  
   }
 
@@ -3687,6 +3735,7 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   {
     er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
     er.message = "Invalid address";
+    m_wallet->delete_staked_outputs();
     return false;
   }
 
@@ -3739,6 +3788,7 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to send the vote";
+    m_wallet->delete_staked_outputs();
     return false; 
   } 
   }
@@ -3746,6 +3796,7 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to send the vote";
+    m_wallet->delete_staked_outputs();
     return false; 
   }
   return true;
@@ -4320,6 +4371,45 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
     er.message = "Failed to send the vote";
     return false;
   }
+  if (!is_number(req.amount) && req.amount != "all")
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = "Failed to send the vote";
+    return false;
+  }
+
+  // set the reserve proof settings
+  if (req.amount != "all")
+  {
+    size_t number;
+    sscanf(req.amount.c_str(), "%zu", &number);
+
+    if (number < MINIMUM_VOTE_AMOUNT)
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "Failed to send the vote";
+      return true;
+    }
+
+    account_minreserve = std::make_pair(0, number * COIN);
+    if (!m_wallet->create_staked_outputs(number,false))
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "Failed to send the vote";
+      m_wallet->delete_staked_outputs();
+      return false;
+    }
+  }
+  else
+  {
+    if (!m_wallet->create_staked_outputs(0,true))
+    {
+      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+      er.message = "Failed to send the vote";
+      m_wallet->delete_staked_outputs();
+      return false;
+    }
+  }
 
   // get the wallet transfers   
   m_wallet->get_transfers(transfers);
@@ -4340,6 +4430,7 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
   {
     er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
     er.message = "Invalid address";
+    m_wallet->delete_staked_outputs();
     return false; 
   }
 
@@ -4376,6 +4467,7 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to revote";
+    m_wallet->delete_staked_outputs();
     return false; 
   }
 
@@ -4384,6 +4476,7 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to revote";
+    m_wallet->delete_staked_outputs();
     return false; 
   }
 
@@ -4398,6 +4491,7 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to revote";
+    m_wallet->delete_staked_outputs();
     return false; 
   }
 
@@ -4406,6 +4500,7 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to revote, Invalid reserve proof length";
+    m_wallet->delete_staked_outputs();
     return false; 
   }
 
@@ -4417,6 +4512,7 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to revote";
+    m_wallet->delete_staked_outputs();
     return false; 
   }
 
@@ -4469,6 +4565,7 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to revote";
+    m_wallet->delete_staked_outputs();
     return false; 
   } 
   }
@@ -4476,6 +4573,7 @@ bool wallet_rpc_server::on_revote(const wallet_rpc::COMMAND_RPC_REVOTE::request&
   {
     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
     er.message = "Failed to check the vote status";
+    m_wallet->delete_staked_outputs();
     return false; 
   }
   return true;

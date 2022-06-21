@@ -2049,9 +2049,11 @@ namespace wallet_rpc
     struct request
     {
       std::string delegate_data;
+      std::string amount;
  
       BEGIN_KV_SERIALIZE_MAP()
         KV_SERIALIZE(delegate_data)
+        KV_SERIALIZE(amount)
       END_KV_SERIALIZE_MAP()
     };
  
@@ -2156,7 +2158,10 @@ namespace wallet_rpc
   {
     struct request
     {
+      std::string amount;    
+ 
       BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(amount)
       END_KV_SERIALIZE_MAP()
     };
 

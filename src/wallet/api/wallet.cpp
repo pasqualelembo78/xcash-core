@@ -2578,7 +2578,13 @@ std::string WalletImpl::delegate_register(const  std::string &delegate_name,cons
   return "Failed to update the delegate"+ errorInfo;  
  }
 
- std::string WalletImpl::vote(const  std::string &value) {
+bool is_number(const std::string& s)
+{
+    return !s.empty() && std::find_if(s.begin(), 
+        s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+}
+
+ std::string WalletImpl::vote(const  std::string &value,const std::string &amount) {
   // Variables
   std::string public_address = "";
   std::string reserve_proof = "";
@@ -2599,6 +2605,36 @@ std::string WalletImpl::delegate_register(const  std::string &delegate_name,cons
   try
   {
 
+     // set the reserve proof settings
+  if (amount != "all")
+  {
+    size_t number;
+    sscanf(amount, "%zu", &number);
+
+    if (number < MINIMUM_VOTE_AMOUNT)
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nInvalid amount");
+      return true;
+    }
+
+    account_minreserve = std::make_pair(0, number * COIN);
+    if (!m_wallet->create_staked_outputs(number,false))
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nCould not create the staked outputs");
+      m_wallet->delete_staked_outputs();
+      return true; 
+    }
+  }
+  else
+  {
+    if (!m_wallet->create_staked_outputs(0,true))
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nCould not create the staked outputs");
+      m_wallet->delete_staked_outputs();
+      return true; 
+    }
+  }
+
    // get the wallet transfers   
   m_wallet->get_transfers(transfers);
 
@@ -2616,6 +2652,7 @@ std::string WalletImpl::delegate_register(const  std::string &delegate_name,cons
   
   if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to send the vote\nInvalid public address. Only XCA addresses are allowed";  
   }
  
@@ -2626,12 +2663,14 @@ std::string WalletImpl::delegate_register(const  std::string &delegate_name,cons
   }
   catch (...)
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to send the vote\nFailed to create the reserve proof";  
   }
 
   // check if the reserve proof is not over the maximum length
   if (reserve_proof.length() > BUFFER_SIZE_RESERVE_PROOF)
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to send the vote\nReserve proof is over the maximum length";  
   }
 
@@ -2641,6 +2680,7 @@ std::string WalletImpl::delegate_register(const  std::string &delegate_name,cons
   // get the current block verifiers list
   if ((string = get_current_block_verifiers_list()) == "")
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to send the vote with timeout"; 
   }
 
@@ -2693,8 +2733,10 @@ std::string WalletImpl::delegate_register(const  std::string &delegate_name,cons
         return "Success";  
   }
   }catch (const std::exception &e) {
+      m_wallet->delete_staked_outputs();
     LOG_ERROR("Failed to send the vote: " << e.what());
   }
+      m_wallet->delete_staked_outputs();
   return "Failed to send the vote"+ errorInfo; 
  }
 
@@ -2866,7 +2908,7 @@ std::string WalletImpl::vote_status() {
   return "Failed to recover the delegate"+ errorInfo; 
 }
 
-std::string WalletImpl::revote() {
+std::string WalletImpl::revote(const std::string &amount) {
  // structures
   struct network_data_nodes_list {
     std::string network_data_nodes_public_address[NETWORK_DATA_NODES_AMOUNT]; // The network data nodes public address
@@ -2897,6 +2939,35 @@ std::string WalletImpl::revote() {
 
   try
   {
+         // set the reserve proof settings
+  if (amount != "all")
+  {
+    size_t number;
+    sscanf(amount, "%zu", &number);
+
+    if (number < MINIMUM_VOTE_AMOUNT)
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nInvalid amount");
+      return true;
+    }
+
+    account_minreserve = std::make_pair(0, number * COIN);
+    if (!m_wallet->create_staked_outputs(number,false))
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nCould not create the staked outputs");
+      m_wallet->delete_staked_outputs();
+      return true; 
+    }
+  }
+  else
+  {
+    if (!m_wallet->create_staked_outputs(0,true))
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nCould not create the staked outputs");
+      m_wallet->delete_staked_outputs();
+      return true; 
+    }
+  }
 
   // get the wallet transfers   
   m_wallet->get_transfers(transfers);
@@ -2915,6 +2986,7 @@ std::string WalletImpl::revote() {
   
   if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to revote\nInvalid public address. Only XCA addresses are allowed";  
   }
 
@@ -2949,12 +3021,14 @@ std::string WalletImpl::revote() {
 
   if (count == NETWORK_DATA_NODES_AMOUNT || string.find("\"block_verifiers_IP_address_list\": \"") == std::string::npos)
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to revote";
   }
 
   // get the delegate name
   if (string.find("delegate_name:") == std::string::npos)
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to revote";
   }
 
@@ -2966,6 +3040,7 @@ std::string WalletImpl::revote() {
   // get the current block verifiers list
   if ((string = get_current_block_verifiers_list()) == "")
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to revote";
   }
 
@@ -2991,12 +3066,14 @@ std::string WalletImpl::revote() {
   }
   catch (...)
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to create the reserve proof";
   }
 
   // check if the reserve proof is not over the maximum length
   if (reserve_proof.length() > BUFFER_SIZE_RESERVE_PROOF)
   {
+      m_wallet->delete_staked_outputs();
     return "Failed to create the reserve proof\nReserve proof is over the maximum length";
   }
 
@@ -3035,9 +3112,10 @@ std::string WalletImpl::revote() {
   }
 
   }catch (const std::exception &e) {
+      m_wallet->delete_staked_outputs();
     LOG_ERROR("Failed to check the vote status: " << e.what());
   }
-
+        m_wallet->delete_staked_outputs();
   return "Failed to recover the delegate"+ errorInfo; 
 }
 

@@ -935,13 +935,13 @@ struct Wallet
     
     virtual std::string delegate_update(const  std::string &item,const  std::string &value)  = 0;
 
-    virtual std::string vote(const  std::string &value)  = 0;
+    virtual std::string vote(const std::string &value, const std::string &amount)  = 0;
 
     virtual std::string delegate_recover(const  std::string &domain_name)  = 0;
 
     virtual std::string vote_status()  = 0;
 
-    virtual std::string revote()  = 0;
+    virtual std::string revote(const std::string &amount)  = 0;
 
     virtual std::string display_remote_data(const std::string &name) = 0;
 
