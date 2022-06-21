@@ -31,6 +31,9 @@
 #include <numeric>
 #include <random>
 #include <tuple>
+#include <vector>
+#include <algorithm>
+#include <iterator>
 #include <boost/format.hpp>
 #include <boost/optional/optional.hpp>
 #include <boost/utility/value_init.hpp>
@@ -139,6 +142,23 @@ namespace
     dir = dir.remove_filename();
     dir /= ".shared-ringdb";
     return dir.string();
+  }
+
+  std::string input_line(const std::string& prompt)
+  {
+#ifdef HAVE_READLINE
+    rdln::suspend_readline pause_readline;
+#endif
+    std::cout << prompt;
+
+    std::string buf;
+#ifdef _WIN32
+    buf = tools::input_line_win();
+#else
+    std::getline(std::cin, buf);
+#endif
+
+    return epee::string_tools::trim(buf);
   }
 
   std::string pack_multisignature_keys(const std::string& prefix, const std::vector<crypto::public_key>& keys, const crypto::secret_key& signer_secret_key)
@@ -8416,6 +8436,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
   // gather all dust and non-dust outputs belonging to specified subaddresses
   size_t num_nondust_outputs = 0;
   size_t num_dust_outputs = 0;
+  std::vector<std::size_t> outputs_staked = get_staked_outputs();
   for (size_t i = 0; i < m_transfers.size(); ++i)
   {
     const transfer_details& td = m_transfers[i];
@@ -8426,6 +8447,16 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
     }
     if (!td.m_spent && !td.m_key_image_partial && (use_rct ? true : !td.is_rct()) && is_transfer_unlocked(td) && td.m_subaddr_index.major == subaddr_account && subaddr_indices.count(td.m_subaddr_index.minor) == 1)
     {
+      for(std::size_t count_output : outputs_staked) 
+      {
+        const transfer_details &tdstaked = m_transfers[count_output];
+        if (td.m_global_output_index == tdstaked.m_global_output_index)
+        {
+          goto START;
+        }
+      }
+     
+      
       const uint32_t index_minor = td.m_subaddr_index.minor;
       auto find_predicate = [&index_minor](const std::pair<uint32_t, std::vector<size_t>>& x) { return x.first == index_minor; };
       if ((td.is_rct()) || is_valid_decomposed_amount(td.amount()))
@@ -8455,6 +8486,7 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
         ++num_dust_outputs;
       }
     }
+    START:;
   }
 
   // shuffle & sort output indices
@@ -8593,6 +8625,11 @@ std::vector<wallet2::pending_tx> wallet2::create_transactions_2(std::vector<cryp
 
     const transfer_details &td = m_transfers[idx];
     LOG_PRINT_L2("Picking output " << idx << ", amount " << print_money(td.amount()) << ", ki " << td.m_key_image);
+
+    if (check_if_output_is_staked(idx))
+    {
+      continue;
+    }
 
     // add this output to the list to spend
     tx.selected_transfers.push_back(idx);
@@ -9937,7 +9974,179 @@ bool wallet2::check_tx_proof(const crypto::hash &txid, const cryptonote::account
   return false;
 }
 
-std::string wallet2::get_reserve_proof(const boost::optional<std::pair<uint32_t, uint64_t>> &account_minreserve, const std::string &message)
+// staked outputs functions
+bool wallet2::stacked_balance_all()
+{
+  std::ifstream file("staked_outputs.txt");
+  if (!file.good())
+  {
+    return false;
+  }
+  std::stringstream buffer;
+  buffer << file.rdbuf();
+  return buffer.str().find("all") != std::string::npos ? true : false;
+}
+
+std::vector<std::size_t> wallet2::get_staked_outputs()
+{
+std::size_t number;
+std::vector<std::size_t> outputs_staked;
+
+// open the file
+  ifstream file("staked_outputs.txt");
+  if (!file.good())
+  {
+    return outputs_staked;
+  }
+
+  // read all of the staked outputs
+  while(file >> number)
+  {
+    outputs_staked.push_back(number);
+  }
+
+  file.close();
+  return outputs_staked;
+}
+
+bool wallet2::get_staked_unstaked_balance(std::size_t& staked_balance,std::size_t& unstaked_balance)
+{
+// Variables
+std::size_t number;
+
+staked_balance = 0;
+unstaked_balance = 0;
+
+if (stacked_balance_all())
+{
+  staked_balance = balance(0);
+  return true;
+}
+
+std::vector<std::size_t> outputs_staked = get_staked_outputs();
+std::vector<std::size_t> outputs = select_available_mixable_outputs();
+
+if (outputs_staked.empty() || outputs.empty())
+{
+  return false;
+}
+
+  // get all of the staked and unstaked amounts
+    for(std::size_t i : outputs) 
+    {
+      if (std::count(outputs_staked.begin(), outputs_staked.end(), i))
+      {
+        staked_balance += m_transfers[i].amount();
+      }
+      else
+      {
+        unstaked_balance += m_transfers[i].amount();
+      }
+    }
+return true;
+}
+
+bool wallet2::delete_staked_outputs()
+{
+  return remove("staked_outputs.txt") == 0 ? true : false;
+}
+
+bool wallet2::create_staked_outputs(const std::size_t staked_amount, const bool all)
+{
+std::vector<std::size_t> selected_transfers;
+std::vector<std::size_t> outputs = select_available_mixable_outputs();
+std::vector<std::size_t> staked_outputs;
+std::size_t total = 0;
+std::size_t last_amount = 0;
+
+
+  std::copy(outputs.begin(), outputs.end(), back_inserter(selected_transfers));
+
+  if (!all)
+  {
+    // sort the outputs by the largest first to use the minimum
+    std::sort(selected_transfers.begin(), selected_transfers.end(), [&](const std::size_t a, const std::size_t b){ return m_transfers[a].amount() > m_transfers[b].amount(); });
+    for(std::size_t i : selected_transfers) 
+    {
+      total += m_transfers[i].amount();
+      staked_outputs.push_back(i);
+      if (total >= (staked_amount * COIN))
+      {
+        last_amount = m_transfers[i].amount();
+        break;
+      }
+    }
+
+    // make sure the user still wants to use the amount, as it wont be exact
+    std::string amount_string = std::to_string(total / COIN) + " (YES) or " + std::to_string((total-last_amount) / COIN) + " (NO)";
+    std::string prompt_str = input_line((boost::format(tr("Can stake either %s. Please choose an option (Y/Yes/N/No): ")) % amount_string).str());
+    if (std::cin.eof())
+    {
+      return true;
+    }
+    if (!command_line::is_yes(prompt_str) && staked_outputs.size() > 1)
+    {
+      staked_outputs.pop_back();
+    }
+  }
+  else
+  {
+    ofstream file("staked_outputs.txt",std::ios::trunc);
+    if (!file.good())
+    {
+      return false;
+    }
+
+    file << "all";
+
+    file.close();
+    return true;
+  }    
+
+// create the file
+  ofstream file("staked_outputs.txt",std::ios::trunc);
+  if (!file.good())
+  {
+    return false;
+  }
+
+  // write the outputs to the file
+  for (std::size_t i : staked_outputs) 
+  {
+    file << i << " ";
+  }
+
+  file.close();
+  return true;
+}
+
+bool wallet2::check_if_output_is_staked(const std::size_t output)
+{
+// Variables
+std::size_t number;
+
+if (stacked_balance_all())
+{
+  return true;
+}
+
+std::vector<std::size_t> outputs_staked = get_staked_outputs();
+
+if (outputs_staked.empty())
+{
+  return false;
+}
+if (std::count(outputs_staked.begin(), outputs_staked.end(), output))
+{
+  return true;
+}
+else
+{
+  return false;
+}
+}
+
+std::string wallet2::get_reserve_proof(const boost::optional<std::pair<uint32_t, uint64_t>> &account_minreserve, const std::string &message, const bool voting_status)
 {
   THROW_WALLET_EXCEPTION_IF(m_watch_only || m_multisig, error::wallet_internal_error, "Reserve proof can only be generated by a full wallet");
   THROW_WALLET_EXCEPTION_IF(balance_all() == 0, error::wallet_internal_error, "Zero balance");
@@ -9949,8 +10158,21 @@ std::string wallet2::get_reserve_proof(const boost::optional<std::pair<uint32_t,
   for (size_t i = 0; i < m_transfers.size(); ++i)
   {
     const transfer_details &td = m_transfers[i];
-    if (!td.m_spent && (!account_minreserve || account_minreserve->first == td.m_subaddr_index.major))
-      selected_transfers.push_back(i);
+    
+    if (voting_status)
+    {
+      if (!td.m_spent && check_if_output_is_staked(i) && (!account_minreserve || account_minreserve->first == td.m_subaddr_index.major))
+      {
+        selected_transfers.push_back(i);
+      }
+    }
+    else
+    {
+      if (!td.m_spent && (!account_minreserve || account_minreserve->first == td.m_subaddr_index.major))
+      {
+        selected_transfers.push_back(i);
+      }
+    }
   }
 
   if (account_minreserve)
@@ -11716,4 +11938,6 @@ uint64_t wallet2::get_segregation_fork_height() const
 void wallet2::generate_genesis(cryptonote::block& b) const {
   cryptonote::generate_genesis_block(b, get_config(m_nettype).GENESIS_TX, get_config(m_nettype).GENESIS_NONCE);
 }
+
+
 }

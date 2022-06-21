@@ -228,6 +228,7 @@ full_addrs.insert(SEED_NODE_5);
 #define XCASH_SIGN_DATA_LENGTH 93 // The length of a xcash_proof_of_stake_signature for the signed data
 #define BUFFER_SIZE_RESERVE_PROOF 25000 // The maximum length of a reserve proof
 #define STEALTH_ADDRESS_OUTPUT_LENGTH 64 // The length of the stealth address output
+#define MINIMUM_VOTE_AMOUNT 2000000 // The minimum vote amount
 
 // Lengths
 #define BITS_IN_BYTE 8 // 8 bits in 1 byte

@@ -422,7 +422,7 @@ namespace
       LOG_PRINT_L0(boost::format("not enough money to transfer, available only %s, sent amount %s") %
         print_money(e.available()) %
         print_money(e.tx_amount()));
-      fail_msg_writer() << sw::tr("Not enough money in unlocked balance");
+      fail_msg_writer() << sw::tr("Not enough money in available balance");
       warn_of_possible_attack = false;
     }
     catch (const tools::error::not_enough_money& e)
@@ -430,7 +430,7 @@ namespace
       LOG_PRINT_L0(boost::format("not enough money to transfer, available only %s, sent amount %s") %
         print_money(e.available()) %
         print_money(e.tx_amount()));
-      fail_msg_writer() << sw::tr("Not enough money in unlocked balance");
+      fail_msg_writer() << sw::tr("Not enough money in available balance");
       warn_of_possible_attack = false;
     }
     catch (const tools::error::tx_not_possible& e)
@@ -440,7 +440,7 @@ namespace
         print_money(e.tx_amount() + e.fee())  %
         print_money(e.tx_amount()) %
         print_money(e.fee()));
-      fail_msg_writer() << sw::tr("Failed to find a way to create transactions. This is usually due to dust which is so small it cannot pay for itself in fees, or trying to send more money than the unlocked balance, or not leaving enough for fees");
+      fail_msg_writer() << sw::tr("Failed to find a way to create transactions. This is usually due to dust which is so small it cannot pay for itself in fees, or trying to send more money than the available balance, or not leaving enough for fees");
       warn_of_possible_attack = false;
     }
     catch (const tools::error::not_enough_outs_to_mix& e)
@@ -2263,6 +2263,26 @@ bool simple_wallet::set_ignore_fractional_outputs(const std::vector<std::string>
   return true;
 }
 
+bool simple_wallet::clear_staked_balance(const std::vector<std::string>& args)
+{
+  if (m_wallet->delete_staked_outputs())
+  {
+    message_writer(console_color_green, false) << tr("Cleared the staked outputs");
+  }
+  else
+  {
+    fail_msg_writer() << tr("Could not clear the staked outputs");
+    return false;
+  }
+  return true;
+}
+
+bool is_number(const std::string& s)
+{
+    return !s.empty() && std::find_if(s.begin(), 
+        s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
+}
+
 bool simple_wallet::vote(const std::vector<std::string>& args)
 {
   // Variables
@@ -2283,7 +2303,7 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
   uint64_t current_block_height;
 
   // define macros
-  #define PARAMETER_AMOUNT 1
+  #define PARAMETER_AMOUNT 2
 
   try
   {
@@ -2308,9 +2328,44 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
     fail_msg_writer() << tr("Failed to send the vote\nFailed to connect to the daemon");
     return true;
   }
+  if (!is_number(args[1]) && args[1] != "all")
+  {
+    fail_msg_writer() << tr("Failed to send the vote\nInvalid amount");
+    return true;
+  }
 
   // ask for the password
   SCOPED_WALLET_UNLOCK();
+
+  // set the reserve proof settings
+  if (args[1] != "all")
+  {
+    size_t number;
+    sscanf(args[1].c_str(), "%zu", &number);
+
+    if (number < MINIMUM_VOTE_AMOUNT)
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nInvalid amount");
+      return true;
+    }
+
+    account_minreserve = std::make_pair(0, number * COIN);
+    if (!m_wallet->create_staked_outputs(number,false))
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nCould not create the staked outputs");
+      m_wallet->delete_staked_outputs();
+      return true; 
+    }
+  }
+  else
+  {
+    if (!m_wallet->create_staked_outputs(0,true))
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nCould not create the staked outputs");
+      m_wallet->delete_staked_outputs();
+      return true; 
+    }
+  }
 
   // get the wallet transfers   
   m_wallet->get_transfers(transfers);
@@ -2326,21 +2381,23 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
         public_address = m_wallet->get_subaddress_as_str({0, 0});
     };
     print_address_sub();
-  
+
   if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
   {
     fail_msg_writer() << tr("Failed to send the vote\nInvalid public address. Only XCA addresses are allowed.");
+    m_wallet->delete_staked_outputs();
     return true;  
   }
- 
+
   // create a reserve proof for the wallets balance  
   try
   {
-    reserve_proof = m_wallet->get_reserve_proof(account_minreserve, "");
+    reserve_proof = m_wallet->get_reserve_proof(account_minreserve, "",true);
   }
   catch (...)
   {
     fail_msg_writer() << tr("Failed to create the reserve proof");
+    m_wallet->delete_staked_outputs();
     return true;  
   }
 
@@ -2348,6 +2405,7 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
   if (reserve_proof.length() > BUFFER_SIZE_RESERVE_PROOF)
   {
     fail_msg_writer() << tr("Failed to send the vote\nReserve proof is over the maximum length");
+    m_wallet->delete_staked_outputs();
     return true;  
   }
 
@@ -2358,6 +2416,7 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
   if ((string = get_current_block_verifiers_list()) == "")
   {
     fail_msg_writer() << tr("Failed to send the vote\n");
+    m_wallet->delete_staked_outputs();
     return true; 
   }
 
@@ -2413,11 +2472,13 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
   {
     fail_msg_writer() << tr("Failed to send the vote"); 
     fail_msg_writer() << error_message;  
+    m_wallet->delete_staked_outputs();
   }
   }
   catch (...)
   {
     fail_msg_writer() << tr("Failed to send the vote");
+    m_wallet->delete_staked_outputs();
   }
   return true;  
 
@@ -3026,9 +3087,44 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
     fail_msg_writer() << tr("Failed to revote\nFailed to connect to the daemon");
     return true;
   }
+  if (!is_number(args[0]) && args[0] != "all")
+  {
+    fail_msg_writer() << tr("Failed to revote\nInvalid amount");
+    return true;
+  }
 
   // ask for the password
   SCOPED_WALLET_UNLOCK();
+
+  // set the reserve proof settings
+  if (args[0] != "all")
+  {
+    size_t number;
+    sscanf(args[0].c_str(), "%zu", &number);
+
+    if (number < MINIMUM_VOTE_AMOUNT)
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nInvalid amount");
+      return true;
+    }
+
+    account_minreserve = std::make_pair(0, number * COIN);
+    if (!m_wallet->create_staked_outputs(number,false))
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nCould not create the staked outputs");
+      m_wallet->delete_staked_outputs();
+      return true; 
+    }
+  }
+  else
+  {
+    if (!m_wallet->create_staked_outputs(0,true))
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nCould not create the staked outputs");
+      m_wallet->delete_staked_outputs();
+      return true; 
+    }
+  }
 
   // get the wallet transfers   
   m_wallet->get_transfers(transfers);
@@ -3048,6 +3144,7 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
   if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
   {
     fail_msg_writer() << tr("Failed to revote\nInvalid public address. Only XCA addresses are allowed.");
+    m_wallet->delete_staked_outputs();
     return true;  
   }
 
@@ -3083,6 +3180,7 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
   if (count == NETWORK_DATA_NODES_AMOUNT)
   {
     fail_msg_writer() << tr("Failed to revote");
+    m_wallet->delete_staked_outputs();
     return true;
   }
 
@@ -3090,6 +3188,7 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
   if (string.find("delegate_name:") == std::string::npos)
   {
     fail_msg_writer() << tr("Failed to revote\nNo vote is currently active for this wallet");
+    m_wallet->delete_staked_outputs();
     return true; 
   }
 
@@ -3099,22 +3198,25 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
   std::string prompt_str = input_line((boost::format(tr("Revoting for %s. Is this okay? (Y/Yes/N/No): ")) % delegate_name).str());
   if (std::cin.eof())
   {
+    m_wallet->delete_staked_outputs();
     return true;
   }
   if (!command_line::is_yes(prompt_str))
   {
     fail_msg_writer() << tr("Failed to revote\n");
+    m_wallet->delete_staked_outputs();
     return true; 
   }
 
   // create a reserve proof for the wallets balance  
   try
   {
-    reserve_proof = m_wallet->get_reserve_proof(account_minreserve, "");
+    reserve_proof = m_wallet->get_reserve_proof(account_minreserve, "",true);
   }
   catch (...)
   {
     fail_msg_writer() << tr("Failed to create the reserve proof");
+    m_wallet->delete_staked_outputs();
     return true;  
   }
 
@@ -3122,6 +3224,7 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
   if (reserve_proof.length() > BUFFER_SIZE_RESERVE_PROOF)
   {
     fail_msg_writer() << tr("Failed to revote\nReserve proof is over the maximum length");
+    m_wallet->delete_staked_outputs();
     return true;  
   }
 
@@ -3132,6 +3235,7 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
   if ((string = get_current_block_verifiers_list()) == "")
   {
     fail_msg_writer() << tr("Failed to revote\n");
+    m_wallet->delete_staked_outputs();
     return true; 
   }
 
@@ -3187,11 +3291,13 @@ bool simple_wallet::revote(const std::vector<std::string>& args)
   {
     fail_msg_writer() << tr("Failed to revote"); 
     fail_msg_writer() << error_message;  
+    m_wallet->delete_staked_outputs();
   }
   }
   catch (...)
   {
     fail_msg_writer() << tr("Failed to revote");
+    m_wallet->delete_staked_outputs();
   }
   return true; 
 }
@@ -4183,13 +4289,13 @@ simple_wallet::simple_wallet()
   m_cmd_binder.set_handler("locked_sweep_all",
                            boost::bind(&simple_wallet::locked_sweep_all, this, _1),
                            tr("locked_sweep_all [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> <lockblocks> [<payment_id>]"),
-                           tr("Send all unlocked balance to an address and lock it for <lockblocks> (max. 1000000). If the parameter \"index<N1>[,<N2>,...]\" is specified, the wallet sweeps outputs received by those address indices. If omitted, the wallet randomly chooses an address index to be used. <priority> is the priority of the sweep. The higher the priority, the higher the transaction fee. Valid values in priority order (from lowest to highest) are: unimportant, normal, elevated, priority. If omitted, the default value (see the command \"set priority\") is used. <ring_size> is the number of inputs to include for untraceability."));
+                           tr("Send all available balance to an address and lock it for <lockblocks> (max. 1000000). If the parameter \"index<N1>[,<N2>,...]\" is specified, the wallet sweeps outputs received by those address indices. If omitted, the wallet randomly chooses an address index to be used. <priority> is the priority of the sweep. The higher the priority, the higher the transaction fee. Valid values in priority order (from lowest to highest) are: unimportant, normal, elevated, priority. If omitted, the default value (see the command \"set priority\") is used. <ring_size> is the number of inputs to include for untraceability."));
   m_cmd_binder.set_handler("sweep_unmixable",
                            boost::bind(&simple_wallet::sweep_unmixable, this, _1),
                            tr("Send all unmixable outputs to yourself with ring_size 1"));
   m_cmd_binder.set_handler("sweep_all", boost::bind(&simple_wallet::sweep_all, this, _1),
                            tr("sweep_all [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] [outputs=<N>] <address> [<payment_id>]"),
-                           tr("Send all unlocked balance to an address. If the parameter \"index<N1>[,<N2>,...]\" is specified, the wallet sweeps outputs received by those address indices. If omitted, the wallet randomly chooses an address index to be used. If the parameter \"outputs=<N>\" is specified and  N > 0, wallet splits the transaction into N even outputs."));
+                           tr("Send all available balance to an address. If the parameter \"index<N1>[,<N2>,...]\" is specified, the wallet sweeps outputs received by those address indices. If omitted, the wallet randomly chooses an address index to be used. If the parameter \"outputs=<N>\" is specified and  N > 0, wallet splits the transaction into N even outputs."));
   m_cmd_binder.set_handler("sweep_below",
                            boost::bind(&simple_wallet::sweep_below, this, _1),
                            tr("sweep_below <amount_threshold> [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> [<payment_id>]"),
@@ -4481,10 +4587,14 @@ simple_wallet::simple_wallet()
                            boost::bind(&simple_wallet::version, this, _1),
                            tr("version"),
                            tr("Returns version information"));
+  m_cmd_binder.set_handler("clear_staked_balance",
+                           boost::bind(&simple_wallet::clear_staked_balance, this, _1),
+                           tr("clear_staked_balance"),
+                           tr("Clears the staked balance. This will allow you to use all funds in the wallet"));
   m_cmd_binder.set_handler("vote",
                            boost::bind(&simple_wallet::vote, this, _1),
-                           tr("vote <delegates_name|delegates_public_address>"),
-                           tr("Votes for a delegate in the DPOPS system"));
+                           tr("vote <delegates_name|delegates_public_address> <amount|all>"),
+                           tr("Votes for a delegate in the DPOPS system. Only use whole amounts of xcash"));
   m_cmd_binder.set_handler("delegate_register",
                            boost::bind(&simple_wallet::delegate_register, this, _1),
                            tr("delegate_register <delegates_name> <delegates_IP_address> <delegates_public_key>"),
@@ -4503,8 +4613,8 @@ simple_wallet::simple_wallet()
                            tr("Gets the vote status of the wallet (delegate name voted to and the total)"));
   m_cmd_binder.set_handler("revote",
                            boost::bind(&simple_wallet::revote, this, _1),
-                           tr("revote"),
-                           tr("Revotes to the currently staked to delegate with the full wallet balance"));
+                           tr("revote <amount|all>"),
+                           tr("Revotes to the currently staked delegate. Only use whole amounts of xcash"));
   m_cmd_binder.set_handler("update_remote_data",
                            boost::bind(&simple_wallet::update_remote_data, this, _1),
                            tr("update_remote_data <item> <value>"),
@@ -6176,13 +6286,13 @@ bool simple_wallet::show_balance_unlocked(bool detailed)
   const std::string tag = m_wallet->get_account_tags().second[m_current_subaddress_account];
   success_msg_writer() << tr("Tag: ") << (tag.empty() ? std::string{tr("(No tag assigned)")} : tag);
   success_msg_writer() << tr("Balance: ") << print_money(m_wallet->balance(m_current_subaddress_account)) << ", "
-    << tr("unlocked balance: ") << print_money(m_wallet->unlocked_balance(m_current_subaddress_account)) << extra;
+    << tr("Available Balance: ") << print_money(m_wallet->unlocked_balance(m_current_subaddress_account)) << extra;
   std::map<uint32_t, uint64_t> balance_per_subaddress = m_wallet->balance_per_subaddress(m_current_subaddress_account);
   std::map<uint32_t, uint64_t> unlocked_balance_per_subaddress = m_wallet->unlocked_balance_per_subaddress(m_current_subaddress_account);
   if (!detailed || balance_per_subaddress.empty())
     return true;
   success_msg_writer() << tr("Balance per address:");
-  success_msg_writer() << boost::format("%15s %21s %21s %7s %21s") % tr("Address") % tr("Balance") % tr("Unlocked balance") % tr("Outputs") % tr("Label");
+  success_msg_writer() << boost::format("%15s %21s %21s %7s %21s") % tr("Address") % tr("Balance") % tr("Available balance") % tr("Outputs") % tr("Label");
   std::vector<tools::wallet2::transfer_details> transfers;
   m_wallet->get_transfers(transfers);
   for (const auto& i : balance_per_subaddress)
@@ -6191,7 +6301,7 @@ bool simple_wallet::show_balance_unlocked(bool detailed)
     std::string address_str = m_wallet->get_subaddress_as_str(subaddr_index).substr(0, 6);
     uint64_t num_unspent_outputs = std::count_if(transfers.begin(), transfers.end(), [&subaddr_index](const tools::wallet2::transfer_details& td) { return !td.m_spent && td.m_subaddr_index == subaddr_index; });
     success_msg_writer() << boost::format(tr("%8u %6s %21s %21s %7u %21s")) % i.first % address_str % print_money(i.second) % print_money(unlocked_balance_per_subaddress[i.first]) % num_unspent_outputs % m_wallet->get_subaddress_label(subaddr_index);
-  }
+  }  
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -6204,6 +6314,18 @@ bool simple_wallet::show_balance(const std::vector<std::string>& args/* = std::v
   }
   LOCK_IDLE_SCOPE();
   show_balance_unlocked(args.size() == 1);
+
+  size_t staked;
+  size_t unstaked;
+  if (m_wallet->get_staked_unstaked_balance(staked,unstaked))
+  {
+    message_writer(console_color_green, false) << tr("Staked Balance: ") << std::to_string(staked / (COIN * 1.0)) << tr(", Unstaked Balance: ") << std::to_string(unstaked / (COIN * 1.0));
+  }
+  else
+  {
+    message_writer(console_color_green, false) << tr("Their is currently no staked balance");
+  }
+  
   return true;
 }
 //----------------------------------------------------------------------------------------------------
@@ -6552,6 +6674,27 @@ bool simple_wallet::transfer_main(int transfer_type, const std::vector<std::stri
 //  "transfer [<tx_privacy_settings>] [index=<N1>[,<N2>,...]] [<priority>] [<ring_size>] <address> <amount> [<payment_id>]"
   if (!try_connect_to_daemon())
     return true;
+
+  if (m_wallet->stacked_balance_all())
+  {
+    std::string amount_string = "balance staked";
+    std::string prompt_str = input_line((boost::format(tr("Full %s, sending a tx will cancel your vote. Choose (YES) to continue, or (NO) to not cancel your vote and not send the tx. (Y/Yes/N/No): ")) % amount_string).str());
+    if (std::cin.eof())
+    {
+      return true;
+    }
+    if (command_line::is_yes(prompt_str))
+    {
+      if (!m_wallet->delete_staked_outputs())
+      {
+        return true;
+      }
+    }
+    else
+    {
+      return true;
+    }
+  }
 
   SCOPED_WALLET_UNLOCK();
 
@@ -7207,7 +7350,7 @@ bool simple_wallet::sweep_unmixable(const std::vector<std::string> &args_)
   }
   catch (const tools::error::not_enough_unlocked_money& e)
   {
-    fail_msg_writer() << tr("Not enough money in unlocked balance");
+    fail_msg_writer() << tr("Not enough money in available balance");
     std::string accepted = input_line((boost::format(tr("Discarding %s of unmixable outputs that cannot be spent, which can be undone by \"rescan_spent\".  Is this okay?  (Y/Yes/N/No): ")) % print_money(e.available())).str());
     if (std::cin.eof())
       return true;
@@ -9192,7 +9335,7 @@ void simple_wallet::print_accounts()
     print_accounts("");
 
   if (num_untagged_accounts < m_wallet->get_num_subaddress_accounts())
-    success_msg_writer() << tr("\nGrand total:\n  Balance: ") << print_money(m_wallet->balance_all()) << tr(", unlocked balance: ") << print_money(m_wallet->unlocked_balance_all());
+    success_msg_writer() << tr("\nGrand total:\n  Balance: ") << print_money(m_wallet->balance_all()) << tr(", available balance: ") << print_money(m_wallet->unlocked_balance_all());
 }
 //----------------------------------------------------------------------------------------------------
 void simple_wallet::print_accounts(const std::string& tag)
@@ -9212,7 +9355,7 @@ void simple_wallet::print_accounts(const std::string& tag)
     success_msg_writer() << tr("Accounts with tag: ") << tag;
     success_msg_writer() << tr("Tag's description: ") << account_tags.first.find(tag)->second;
   }
-  success_msg_writer() << boost::format("  %15s %21s %21s %21s") % tr("Account") % tr("Balance") % tr("Unlocked balance") % tr("Label");
+  success_msg_writer() << boost::format("  %15s %21s %21s %21s") % tr("Account") % tr("Balance") % tr("Available balance") % tr("Label");
   uint64_t total_balance = 0, total_unlocked_balance = 0;
   for (uint32_t account_index = 0; account_index < m_wallet->get_num_subaddress_accounts(); ++account_index)
   {

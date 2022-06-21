@@ -223,6 +223,7 @@ namespace cryptonote
     bool blackballed(const std::vector<std::string>& args);
     bool version(const std::vector<std::string>& args);
     bool vote(const std::vector<std::string>& args);
+    bool clear_staked_balance(const std::vector<std::string>& args);
     bool delegate_register(const std::vector<std::string>& args);
     bool delegate_update(const std::vector<std::string>& args);
     bool delegate_recover(const std::vector<std::string>& args);

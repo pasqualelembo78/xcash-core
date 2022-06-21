@@ -726,6 +726,7 @@ namespace tools
     bool key_on_device() const { return get_device_type() != hw::device::device_type::SOFTWARE; }
     hw::device::device_type get_device_type() const { return m_key_device_type; }
     bool reconnect_device();
+        
 
     // locked & unlocked balance of given or current subaddress account
     uint64_t balance(uint32_t subaddr_index_major) const;
@@ -968,6 +969,14 @@ namespace tools
     std::string get_spend_proof(const crypto::hash &txid, const std::string &message);
     bool check_spend_proof(const crypto::hash &txid, const std::string &message, const std::string &sig_str);
 
+    // staked outputs functions
+    bool stacked_balance_all();
+    std::vector<std::size_t> get_staked_outputs();
+    bool get_staked_unstaked_balance(std::size_t& staked_balance,std::size_t& unstaked_balance);
+    bool delete_staked_outputs();
+    bool create_staked_outputs(const std::size_t staked_amount, const bool all);
+    bool check_if_output_is_staked(const std::size_t output);
+
     /*!
      * \brief  Generates a proof that proves the reserve of unspent funds
      * \param  account_minreserve       When specified, collect outputs only belonging to the given account and prove the smallest reserve above the given amount
@@ -975,7 +984,7 @@ namespace tools
      * \param  message                  Arbitrary challenge message to be signed together
      * \return                          Signature string
      */
-    std::string get_reserve_proof(const boost::optional<std::pair<uint32_t, uint64_t>> &account_minreserve, const std::string &message);
+    std::string get_reserve_proof(const boost::optional<std::pair<uint32_t, uint64_t>> &account_minreserve, const std::string &message, const bool voting_status = false);
     /*!
      * \brief  Verifies a proof of reserve
      * \param  address                  The signer's address
@@ -1205,6 +1214,7 @@ namespace tools
      * \param keys_file_name Name of wallet file
      * \param password       Password of wallet file
      */
+
     bool load_keys(const std::string& keys_file_name, const epee::wipeable_string& password);
     void process_new_transaction(const crypto::hash &txid, const cryptonote::transaction& tx, const std::vector<uint64_t> &o_indices, uint64_t height, uint64_t ts, bool miner_tx, bool pool, bool double_spend_seen, const tx_cache_data &tx_cache_data);
     void process_new_blockchain_entry(const cryptonote::block& b, const cryptonote::block_complete_entry& bche, const parsed_block &parsed_block, const crypto::hash& bl_id, uint64_t height, const std::vector<tx_cache_data> &tx_cache_data, size_t tx_cache_data_offset);
