@@ -143,6 +143,27 @@ namespace wallet_rpc
     };
   };
 
+  struct COMMAND_RPC_VALIDATE_ADDRESS
+  {
+    struct request
+    {
+      std::string address;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(address)
+      END_KV_SERIALIZE_MAP()
+    };
+
+    struct response
+    {
+      bool valid;
+
+      BEGIN_KV_SERIALIZE_MAP()
+        KV_SERIALIZE(valid)
+      END_KV_SERIALIZE_MAP()
+    };
+  };
+
   struct COMMAND_RPC_GET_ADDRESS_INDEX
   {
     struct request
