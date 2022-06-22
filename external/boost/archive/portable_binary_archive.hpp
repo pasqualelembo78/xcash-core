@@ -11,6 +11,8 @@
 # pragma once
 #endif
 
+#pragma GCC diagnostic ignored "-Wstringop-overflow"
+
 #include <boost/config.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/static_assert.hpp>
