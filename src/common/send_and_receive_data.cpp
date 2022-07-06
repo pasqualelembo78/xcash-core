@@ -30,7 +30,7 @@ std::string send_and_receive_data(std::string IP_address,std::string data2, int 
 std::string send_and_receive_http_data(std::string data2, int send_or_receive_socket_data_timeout_settings)
 {
   // define macros
-  #define HOST "162.55.235.87"
+  #define HOST "turbotx.xcash.foundation"
   #define TURBO_TX_URL "http://" HOST "/"
 
   // Variables
