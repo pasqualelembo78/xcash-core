@@ -3606,9 +3606,9 @@ bool is_number(const std::string& s)
         s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
 }
 
-bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req, wallet_rpc::COMMAND_RPC_VOTE::response& res, epee::json_rpc::error& er)
+std::string wallet_rpc_server::vote_v1(const std::string delegate_data)
 {
-  // Variables
+// Variables
   std::string public_address = "";
   std::string reserve_proof = "";
   tools::wallet2::transfer_container transfers;
@@ -3627,59 +3627,16 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   try
   {
   // check if the wallet is open
-  if (!m_wallet) return not_open(er);
+  if (!m_wallet) return "wallet is not open";
 
   // error check
   if (m_wallet->key_on_device())
   {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to send the vote";
-    return false;
+    return "Failed to send the vote";
   }
   if (m_wallet->watch_only() || m_wallet->multisig())
   {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to send the vote";
-    return false;
-  }
-  if (!is_number(req.amount) && req.amount != "all")
-  {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to send the vote";
-    return false;
-  }
-
-  // set the reserve proof settings
-  if (req.amount != "all")
-  {
-    size_t number;
-    sscanf(req.amount.c_str(), "%zu", &number);
-
-    if (number < MINIMUM_VOTE_AMOUNT)
-    {
-      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-      er.message = "Failed to send the vote";
-      return true;
-    }
-
-    account_minreserve = std::make_pair(0, number * COIN);
-    if (!m_wallet->create_staked_outputs(number,false))
-    {
-      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-      er.message = "Failed to send the vote";
-      m_wallet->delete_staked_outputs();
-      return false;
-    }
-  }
-  else
-  {
-    if (!m_wallet->create_staked_outputs(0,true))
-    {
-      er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-      er.message = "Failed to send the vote";
-      m_wallet->delete_staked_outputs();
-      return false;
-    }
+    return "Failed to send the vote";
   }
 
   // get the wallet transfers   
@@ -3699,10 +3656,7 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   
   if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
   {
-    er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
-    er.message = "Invalid address";
-    m_wallet->delete_staked_outputs();
-    return false;
+    return "Failed to send the vote, invalid address";
   }
  
   // create a reserve proof for the wallets balance  
@@ -3712,19 +3666,13 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   }
   catch (...)
   {
-     er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-     er.message = "Failed to send the vote";
-     m_wallet->delete_staked_outputs();
-     return false;  
+     return "Failed to send the vote, could not create the reserve proof"; 
   }
 
   // check if the reserve proof is not over the maximum length
   if (reserve_proof.length() > BUFFER_SIZE_RESERVE_PROOF)
   {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to send the vote\nReserve proof is over the maximum length";
-    m_wallet->delete_staked_outputs();
-    return false;  
+    return "Failed to send the vote\nReserve proof is over the maximum length";
   }
 
   // wait until the next valid data time
@@ -3733,10 +3681,7 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   // get the current block verifiers list
   if ((string = get_current_block_verifiers_list()) == "")
   {
-    er.code = WALLET_RPC_ERROR_CODE_WRONG_ADDRESS;
-    er.message = "Invalid address";
-    m_wallet->delete_staked_outputs();
-    return false;
+    return "Failed to send the vote, could not get the current list of block verifiers";
   }
 
   total_delegates = std::count(string.begin(), string.end(), '|') / 3;
@@ -3758,7 +3703,7 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   current_block_height = m_wallet->get_blockchain_current_height();
  
   // create the data
-  data2 = "NODE_TO_BLOCK_VERIFIERS_ADD_RESERVE_PROOF|" + req.delegate_data + "|" + reserve_proof + "|" + public_address + "|";
+  data2 = "NODE_TO_BLOCK_VERIFIERS_ADD_RESERVE_PROOF|" + delegate_data + "|" + reserve_proof + "|" + public_address + "|";
  
   // sign the data    
   data3 = m_wallet->sign(data2);
@@ -3781,25 +3726,207 @@ bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req
   // check the result of the data (allow for data to be valid if a majority of seed nodes accepted the data during registration mode, as this is when only the seed nodes will check the majority every block time)
   if ((count2 >= total_delegates_valid_amount) || (current_block_height < HF_BLOCK_HEIGHT_PROOF_OF_STAKE && count3 >= (NETWORK_DATA_NODES_AMOUNT-1)))
   {
-    res.vote_status = "success";
-    return true;            
+    return "true";            
   } 
   else
   {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to send the vote";
-    m_wallet->delete_staked_outputs();
-    return false; 
+    return "Failed to send the vote";
   } 
   }
   catch (...)
   {
-    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
-    er.message = "Failed to send the vote";
-    m_wallet->delete_staked_outputs();
-    return false; 
+    return "Failed to send the vote";
   }
-  return true;
+  return "true";
+}
+
+std::string wallet_rpc_server::vote_v2(const std::string delegate_data, const std::string amount)
+{
+  // Variables
+  std::string public_address = "";
+  std::string reserve_proof = "";
+  tools::wallet2::transfer_container transfers;
+  boost::optional<std::pair<uint32_t, uint64_t>> account_minreserve;
+  std::string block_verifiers_IP_address[BLOCK_VERIFIERS_TOTAL_AMOUNT]; // The block verifiers IP address
+  std::string string = "";
+  std::string data2 = "";
+  std::string data3 = ""; 
+  std::size_t count; 
+  std::size_t count2;
+  std::size_t count3;
+  std::size_t total_delegates;
+  std::size_t total_delegates_valid_amount;
+  uint64_t current_block_height;
+
+  try
+  {
+  // check if the wallet is open
+  if (!m_wallet) return "wallet is not open";
+
+  // error check
+  if (m_wallet->key_on_device())
+  {
+    return "Failed to send the vote";
+  }
+  if (m_wallet->watch_only() || m_wallet->multisig())
+  {
+    return "Failed to send the vote";
+  }
+  if (!is_number(amount) && amount != "all")
+  {
+    return "Failed to send the vote, the amount is invalid";
+  }
+
+  // set the reserve proof settings
+  if (amount != "all")
+  {
+    size_t number;
+    sscanf(amount.c_str(), "%zu", &number);
+
+    if (number < MINIMUM_VOTE_AMOUNT)
+    {
+      return "Failed to send the vote, the vote is under the minimum amount";
+    }
+
+    account_minreserve = std::make_pair(0, number * COIN);
+    if (!m_wallet->create_staked_outputs(number,false))
+    {
+      m_wallet->delete_staked_outputs();
+      return "Failed to send the vote, could not create staked outputs";
+    }
+  }
+  else
+  {
+    if (!m_wallet->create_staked_outputs(0,true))
+    {
+      m_wallet->delete_staked_outputs();
+      return "Failed to send the vote, could not create staked outputs";
+    }
+  }
+
+  // get the wallet transfers   
+  m_wallet->get_transfers(transfers);
+
+  // get the wallets public address
+    auto print_address_sub = [this, &transfers, &public_address]()
+    {
+      bool used = std::find_if(
+        transfers.begin(), transfers.end(),
+        [this](const tools::wallet2::transfer_details& td) {
+          return td.m_subaddr_index == cryptonote::subaddress_index{ 0, 0 };
+        }) != transfers.end();
+        public_address = m_wallet->get_subaddress_as_str({0, 0});
+    };
+    print_address_sub();
+  
+  if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+  {
+    m_wallet->delete_staked_outputs();
+    return "Failed to send the vote, invalid address";
+  }
+ 
+  // create a reserve proof for the wallets balance  
+  try
+  {
+    reserve_proof = m_wallet->get_reserve_proof(account_minreserve, "");
+  }
+  catch (...)
+  {
+     m_wallet->delete_staked_outputs();
+     return "Failed to send the vote, could not create the reserve proof";
+  }
+
+  // check if the reserve proof is not over the maximum length
+  if (reserve_proof.length() > BUFFER_SIZE_RESERVE_PROOF)
+  {
+    m_wallet->delete_staked_outputs();
+    return "Failed to send the vote\nReserve proof is over the maximum length";
+  }
+
+  // wait until the next valid data time
+  sync_minutes_and_seconds(1,false);
+
+  // get the current block verifiers list
+  if ((string = get_current_block_verifiers_list()) == "")
+  {
+    m_wallet->delete_staked_outputs();
+    return "Failed to send the vote, could not get the current list of block verifiers";
+  }
+
+  total_delegates = std::count(string.begin(), string.end(), '|') / 3;
+  if (total_delegates > BLOCK_VERIFIERS_AMOUNT)
+  {
+    total_delegates = BLOCK_VERIFIERS_AMOUNT;
+  }
+  total_delegates_valid_amount = ceil(total_delegates * BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE);
+
+  // initialize the current_block_verifiers_list struct
+  for (count = 0, count2 = string.find("block_verifiers_IP_address_list")+35, count3 = 0; count < total_delegates; count++)
+  {
+    count3 = string.find("|",count2);
+    block_verifiers_IP_address[count] = string.substr(count2,count3 - count2);
+    count2 = count3 + 1;
+  }
+
+  // get the current block height
+  current_block_height = m_wallet->get_blockchain_current_height();
+ 
+  // create the data
+  data2 = "NODE_TO_BLOCK_VERIFIERS_ADD_RESERVE_PROOF|" + delegate_data + "|" + reserve_proof + "|" + public_address + "|";
+ 
+  // sign the data    
+  data3 = m_wallet->sign(data2);
+
+  data2 += data3 + "|";
+
+  // send the data to all block verifiers
+  for (count = 0, count2 = 0, count3 = 0; count < total_delegates; count++)
+  {
+    if (send_and_receive_data(block_verifiers_IP_address[count],data2) == "The vote was successfully added to the database")
+    {
+      count2++;
+      if (block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_1 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_2 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_3 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_4 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_5)
+      {
+        count3++;
+      }
+    }     
+  }
+
+  // check the result of the data (allow for data to be valid if a majority of seed nodes accepted the data during registration mode, as this is when only the seed nodes will check the majority every block time)
+  if ((count2 >= total_delegates_valid_amount) || (current_block_height < HF_BLOCK_HEIGHT_PROOF_OF_STAKE && count3 >= (NETWORK_DATA_NODES_AMOUNT-1)))
+  {
+    return "true";      
+  } 
+  else
+  {
+    m_wallet->delete_staked_outputs();
+    return "Failed to send the vote";
+  } 
+  }
+  catch (...)
+  {
+    m_wallet->delete_staked_outputs();
+    return "Failed to send the vote";
+  }
+  return "true";
+}
+
+bool wallet_rpc_server::on_vote(const wallet_rpc::COMMAND_RPC_VOTE::request& req, wallet_rpc::COMMAND_RPC_VOTE::response& res, epee::json_rpc::error& er)
+{
+  // Constants
+  const std::string data = m_wallet->get_blockchain_current_height() < BLOCK_HEIGHT_SF_VOTING_V2 ? vote_v1(req.delegate_data) : vote_v2(req.delegate_data,req.amount);
+
+  if (data != "true")
+  {
+    er.code = WALLET_RPC_ERROR_CODE_UNKNOWN_ERROR;
+    er.message = data;
+    return false;
+  }
+  else
+  {
+    res.vote_status = "success";
+    return true;
+  }
 }
 
 bool wallet_rpc_server::on_delegate_register(const wallet_rpc::COMMAND_RPC_DELEGATE_REGISTER::request& req, wallet_rpc::COMMAND_RPC_DELEGATE_REGISTER::response& res, epee::json_rpc::error& er)

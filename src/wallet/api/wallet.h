@@ -197,6 +197,8 @@ public:
     virtual bool isKeysFileLocked() override;
     virtual std::string delegate_register(const  std::string &delegate_name,const  std::string &delegate_IP_address,const  std::string &block_verifier_messages_public_key) override;
     virtual std::string delegate_update(const  std::string &item,const  std::string &value)  override;
+    std::string vote_v1(const std::string delegate_data);
+    std::string vote_v2(const std::string delegate_data, const std::string amount);
     virtual std::string vote(const  std::string &value,const std::string &amount) override;
     virtual std::string delegate_recover(const  std::string &domain_name)  override;
     virtual std::string vote_status()  override;

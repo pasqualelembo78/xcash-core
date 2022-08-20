@@ -258,6 +258,7 @@ full_addrs.insert(SEED_NODE_5);
 
 // Updates data
 #define BLOCK_HEIGHT_SF_V_2_2_0 900100 // stealth address verification
+#define BLOCK_HEIGHT_SF_VOTING_V2 900100 // voting V2 (allows for any amount of the balance, not just the full balance)
 
 // Remote Data
 #define HF_BLOCK_HEIGHT_REMOTE_DATA 900885 // The first block of the remote data

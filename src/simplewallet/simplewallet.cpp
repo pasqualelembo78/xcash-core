@@ -2283,9 +2283,9 @@ bool is_number(const std::string& s)
         s.end(), [](unsigned char c) { return !std::isdigit(c); }) == s.end();
 }
 
-bool simple_wallet::vote(const std::vector<std::string>& args)
+bool simple_wallet::vote_v1(const std::string delegate_data)
 {
-  // Variables
+// Variables
   std::string public_address = "";
   std::string reserve_proof = "";
   tools::wallet2::transfer_container transfers;
@@ -2302,17 +2302,8 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
   std::size_t total_delegates_valid_amount;
   uint64_t current_block_height;
 
-  // define macros
-  #define PARAMETER_AMOUNT 2
-
   try
   {
-  // error check
-  if (args.size() != PARAMETER_AMOUNT)
-  {
-    fail_msg_writer() << tr("Failed to send the vote\nInvalid parameters");
-    return true;
-  }    
   if (m_wallet->key_on_device())
   {
     fail_msg_writer() << tr("Failed to send the vote\nCommand not supported by HW wallet");
@@ -2328,7 +2319,157 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
     fail_msg_writer() << tr("Failed to send the vote\nFailed to connect to the daemon");
     return true;
   }
-  if (!is_number(args[1]) && args[1] != "all")
+
+  // ask for the password
+  SCOPED_WALLET_UNLOCK();
+
+  // get the wallet transfers   
+  m_wallet->get_transfers(transfers);
+
+  // get the wallets public address
+    auto print_address_sub = [this, &transfers, &public_address]()
+    {
+      bool used = std::find_if(
+        transfers.begin(), transfers.end(),
+        [this](const tools::wallet2::transfer_details& td) {
+          return td.m_subaddr_index == cryptonote::subaddress_index{ 0, 0 };
+        }) != transfers.end();
+        public_address = m_wallet->get_subaddress_as_str({0, 0});
+    };
+    print_address_sub();
+  
+  if (public_address.length() != XCASH_WALLET_LENGTH || public_address.substr(0,sizeof(XCASH_WALLET_PREFIX)-1) != XCASH_WALLET_PREFIX)
+  {
+    fail_msg_writer() << tr("Failed to send the vote\nInvalid public address. Only XCA addresses are allowed.");
+    return true;  
+  }
+ 
+  // create a reserve proof for the wallets balance  
+  try
+  {
+    reserve_proof = m_wallet->get_reserve_proof(account_minreserve, "");
+  }
+  catch (...)
+  {
+    fail_msg_writer() << tr("Failed to create the reserve proof");
+    return true;  
+  }
+
+  // check if the reserve proof is not over the maximum length
+  if (reserve_proof.length() > BUFFER_SIZE_RESERVE_PROOF)
+  {
+    fail_msg_writer() << tr("Failed to send the vote\nReserve proof is over the maximum length");
+    return true;  
+  }
+
+  // wait until the next valid data time
+  sync_minutes_and_seconds(1,true);
+
+  // get the current block verifiers list
+  if ((string = get_current_block_verifiers_list()) == "")
+  {
+    fail_msg_writer() << tr("Failed to send the vote\n");
+    return true; 
+  }
+
+  total_delegates = std::count(string.begin(), string.end(), '|') / 3;
+  if (total_delegates > BLOCK_VERIFIERS_AMOUNT)
+  {
+    total_delegates = BLOCK_VERIFIERS_AMOUNT;
+  }
+  total_delegates_valid_amount = ceil(total_delegates * BLOCK_VERIFIERS_VALID_AMOUNT_PERCENTAGE);
+
+  // initialize the current_block_verifiers_list struct
+  for (count = 0, count2 = string.find("block_verifiers_IP_address_list")+35, count3 = 0; count < total_delegates; count++)
+  {
+    count3 = string.find("|",count2);
+    block_verifiers_IP_address[count] = string.substr(count2,count3 - count2);
+    count2 = count3 + 1;
+  }
+
+  // get the current block height
+  current_block_height = m_wallet->get_blockchain_current_height();
+ 
+  // create the data
+  data2 = "NODE_TO_BLOCK_VERIFIERS_ADD_RESERVE_PROOF|" + delegate_data + "|" + reserve_proof + "|" + public_address + "|";
+ 
+  // sign the data    
+  data3 = m_wallet->sign(data2);
+
+  data2 += data3 + "|";
+
+  // send the data to all block verifiers
+  for (count = 0, count2 = 0, count3 = 0; count < total_delegates; count++)
+  {
+    if ((data3 = send_and_receive_data(block_verifiers_IP_address[count],data2)) == "The vote was successfully added to the database")
+    {
+      count2++;
+      if (block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_1 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_2 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_3 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_4 || block_verifiers_IP_address[count] == NETWORK_DATA_NODE_IP_ADDRESS_5)
+      {
+        count3++;
+      }
+    } 
+    else
+    {
+      error_message = data3;
+    }     
+  }
+
+  // check the result of the data (allow for data to be valid if a majority of seed nodes accepted the data during registration mode, as this is when only the seed nodes will check the majority every block time)
+  if ((count2 >= total_delegates_valid_amount) || (current_block_height < HF_BLOCK_HEIGHT_PROOF_OF_STAKE && count3 >= (NETWORK_DATA_NODES_AMOUNT-1)))
+  {
+    message_writer(console_color_green, false) << "Vote has been sent successfully";             
+  }
+  else
+  {
+    fail_msg_writer() << tr("Failed to send the vote"); 
+    fail_msg_writer() << error_message;  
+  }
+  }
+  catch (...)
+  {
+    fail_msg_writer() << tr("Failed to send the vote");
+  }
+  return true; 
+}
+
+bool simple_wallet::vote_v2(const std::string delegate_data, const std::string amount)
+{
+// Variables
+  std::string public_address = "";
+  std::string reserve_proof = "";
+  tools::wallet2::transfer_container transfers;
+  boost::optional<std::pair<uint32_t, uint64_t>> account_minreserve;
+  std::string block_verifiers_IP_address[BLOCK_VERIFIERS_TOTAL_AMOUNT]; // The block verifiers IP address
+  std::string string = "";
+  std::string data2 = "";
+  std::string data3 = ""; 
+  std::string error_message;
+  std::size_t count; 
+  std::size_t count2;
+  std::size_t count3;
+  std::size_t total_delegates;
+  std::size_t total_delegates_valid_amount;
+  uint64_t current_block_height;
+
+  try
+  {
+  if (m_wallet->key_on_device())
+  {
+    fail_msg_writer() << tr("Failed to send the vote\nCommand not supported by HW wallet");
+    return true;
+  }
+  if (m_wallet->watch_only() || m_wallet->multisig())
+  {
+    fail_msg_writer() << tr("Failed to send the vote\nThe reserve proof can be generated only by a full wallet");
+    return true;
+  }
+  if (!try_connect_to_daemon())
+  {
+    fail_msg_writer() << tr("Failed to send the vote\nFailed to connect to the daemon");
+    return true;
+  }
+  if (!is_number(amount) && amount != "all")
   {
     fail_msg_writer() << tr("Failed to send the vote\nInvalid amount");
     return true;
@@ -2338,10 +2479,10 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
   SCOPED_WALLET_UNLOCK();
 
   // set the reserve proof settings
-  if (args[1] != "all")
+  if (amount != "all")
   {
     size_t number;
-    sscanf(args[1].c_str(), "%zu", &number);
+    sscanf(amount.c_str(), "%zu", &number);
 
     if (number < MINIMUM_VOTE_AMOUNT)
     {
@@ -2439,7 +2580,7 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
   current_block_height = m_wallet->get_blockchain_current_height();
  
   // create the data
-  data2 = "NODE_TO_BLOCK_VERIFIERS_ADD_RESERVE_PROOF|" + args.front() + "|" + reserve_proof + "|" + public_address + "|";
+  data2 = "NODE_TO_BLOCK_VERIFIERS_ADD_RESERVE_PROOF|" + delegate_data + "|" + reserve_proof + "|" + public_address + "|";
  
   // sign the data    
   data3 = m_wallet->sign(data2);
@@ -2481,8 +2622,36 @@ bool simple_wallet::vote(const std::vector<std::string>& args)
     m_wallet->delete_staked_outputs();
   }
   return true;  
+}
 
-  #undef PARAMETER_AMOUNT
+bool simple_wallet::vote(const std::vector<std::string>& args)
+{
+  // define macros
+  #define PARAMETER_AMOUNT_VOTE_V1 1
+  #define PARAMETER_AMOUNT_VOTE_V2 2
+
+  if (m_wallet->get_blockchain_current_height() < BLOCK_HEIGHT_SF_VOTING_V2)
+  {
+    if (args.size() != PARAMETER_AMOUNT_VOTE_V1)
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nInvalid parameters");
+      return true;
+    }    
+    vote_v1(args.front());
+  }
+  else
+  {
+    if (args.size() != PARAMETER_AMOUNT_VOTE_V2)
+    {
+      fail_msg_writer() << tr("Failed to send the vote\nInvalid parameters");
+      return true;
+    }   
+    vote_v2(args.front(),args[1]);
+  }
+  return true;
+
+  #undef PARAMETER_AMOUNT_VOTE_V1
+  #undef PARAMETER_AMOUNT_VOTE_V2
 }
 
 bool simple_wallet::delegate_register(const std::vector<std::string>& args)
