@@ -217,7 +217,7 @@ full_addrs.insert(SEED_NODE_5);
 
 // Blockchain
 #define HF_VERSION_PROOF_OF_STAKE 14
-#define HF_BLOCK_HEIGHT_PROOF_OF_STAKE 978000 // The first block of the X-CASH proof of stake
+#define HF_BLOCK_HEIGHT_PROOF_OF_STAKE 980000 // The first block of the X-CASH proof of stake
 #define BLOCK_TIME 5 // the block time in minutes
 #define BLOCKS_PER_DAY_FIVE_MINUTE_BLOCK_TIME 288 // The blocks per day with a 5 minute block time
 #define MAXIMUM_RESERVE_BYTES_LEGNTH 4096 // The maximum size in bytes for the reserve bytes in the block header
@@ -257,8 +257,8 @@ full_addrs.insert(SEED_NODE_5);
 
 
 // Updates data
-#define BLOCK_HEIGHT_SF_V_2_2_0 978100 // stealth address verification
-#define BLOCK_HEIGHT_SF_VOTING_V2 980000 // voting V2 (allows for any amount of the balance, not just the full balance)
+#define BLOCK_HEIGHT_SF_V_2_2_0 980100 // stealth address verification
+#define BLOCK_HEIGHT_SF_VOTING_V2 982000 // voting V2 (allows for any amount of the balance, not just the full balance)
 
 // Remote Data
 #define HF_BLOCK_HEIGHT_REMOTE_DATA 9000885 // The first block of the remote data
