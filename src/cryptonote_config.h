@@ -169,7 +169,7 @@
 
 #define ALLOW_DEBUG_COMMANDS
 
-#define CRYPTONOTE_NAME                         "X-CASH"
+#define CRYPTONOTE_NAME                         "Mevacoin"
 #define CRYPTONOTE_POOLDATA_FILENAME            "X-CASH_poolstate.bin"
 #define CRYPTONOTE_BLOCKCHAINDATA_FILENAME      "X-CASH_data.mdb"
 #define CRYPTONOTE_BLOCKCHAINDATA_LOCK_FILENAME "X-CASH_lock.mdb"
@@ -321,9 +321,9 @@ namespace config
   uint16_t const RPC_DEFAULT_PORT = 18281;
   uint16_t const ZMQ_RPC_DEFAULT_PORT = 18282;
   boost::uuids::uuid const NETWORK_ID = { {
-      0x10 ,0x10, 0x41, 0x53 , 0x48, 0x62 , 0x41, 0x65, 0x17, 0x31, 0x00, 0x82, 0x16, 0xA1, 0xA1, 0x10
+      0xcf, 0x74, 0x21, 0x8a, 0x75, 0x61, 0x41, 0x0b, 0x8e, 0xa7, 0xa3, 0xa9, 0xc0, 0x12, 0x4b, 0x92 
     } };
-  std::string const GENESIS_TX = "013c01ff0001b197bcc5c605029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101f1dde8d8d6c53e9d2e920d6e66432eaff6a85b2d25043fc29ef477b075b143df";
+  std::string const GENESIS_TX = "013c01ff0001ffffffff01029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101aee172967f8c716a32453425496e42b34e7b8ceaa4c3f5072f3f15c73973a4dc";
   uint32_t const GENESIS_NONCE = 10000;
 
   namespace testnet
@@ -335,9 +335,9 @@ namespace config
     uint16_t const RPC_DEFAULT_PORT = 28281;
     uint16_t const ZMQ_RPC_DEFAULT_PORT = 28282;
     boost::uuids::uuid const NETWORK_ID = { {
-        0x10 ,0x10, 0x41, 0x53 , 0x48, 0x62 , 0x41, 0x65, 0x17, 0x31, 0x00, 0x82, 0x16, 0xA1, 0xA1, 0x91
-      } };
-    std::string const GENESIS_TX = "013c01ff0001b197bcc5c605029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101f1dde8d8d6c53e9d2e920d6e66432eaff6a85b2d25043fc29ef477b075b143df";
+        0xcf, 0x74, 0x21, 0x8a, 0x75, 0x61, 0x41, 0x0b, 0x8e, 0xa7, 0xa3, 0xa9, 0xc0, 0x12, 0x4b, 0x92 
+     } };
+    std::string const GENESIS_TX = "013c01ff0001ffffffff01029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101aee172967f8c716a32453425496e42b34e7b8ceaa4c3f5072f3f15c73973a4dc";
     uint32_t const GENESIS_NONCE = 10001;
   }
 
@@ -350,9 +350,9 @@ namespace config
     uint16_t const RPC_DEFAULT_PORT = 38081;
     uint16_t const ZMQ_RPC_DEFAULT_PORT = 38082;
     boost::uuids::uuid const NETWORK_ID = { {
-        0x10 ,0x10, 0x41, 0x53 , 0x48, 0x62 , 0x41, 0x65, 0x17, 0x31, 0x00, 0x82, 0x16, 0xA1, 0xA1, 0x92
-      } };
-    std::string const GENESIS_TX = "013c01ff0001ffffffffffff0302df5d56da0c7d643ddd1ce61901c7bdc5fb1738bfe39fbe69c28a3a7032729c0f2101168d0c4ca86fb55a4cf6a36d31431be1c53a3bd7411bb24e8832410289fa6f3b";
+        0xcf, 0x74, 0x21, 0x8a, 0x75, 0x61, 0x41, 0x0b, 0x8e, 0xa7, 0xa3, 0xa9, 0xc0, 0x12, 0x4b, 0x92 
+     } };
+    std::string const GENESIS_TX = "013c01ff0001ffffffff01029b2e4c0281c0b02e7c53291a94d1d0cbff8883f8024f5142ee494ffbbd0880712101aee172967f8c716a32453425496e42b34e7b8ceaa4c3f5072f3f15c73973a4dc";
     uint32_t const GENESIS_NONCE = 10002;
   }
 }
